@@ -1,11 +1,15 @@
 # 📅 Calendar PDF Generator
 
+[![GitHub Pages](https://img.shields.io/badge/demo-live-success?style=for-the-badge&logo=github)](https://webnautes.github.io/calendar-pdf-generator)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
 순수 JavaScript 기반 달력 생성 및 PDF 다운로드 웹 애플리케이션입니다.
 
 ## 🌐 데모
 
 **GitHub Pages에서 바로 사용해보세요:**
-👉 [https://webnautes.github.io/calendar-pdf-generator](https://webnautes.github.io/calendar-pdf-generator)
+
+🔗 **[https://webnautes.github.io/calendar-pdf-generator](https://webnautes.github.io/calendar-pdf-generator)**
 
 ## 🚀 기능
 
