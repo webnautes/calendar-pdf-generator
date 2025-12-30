@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>달력 PDF 생성기</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 달력 생성기</h1>
+        </header>
+
+        <div class="controls">
+            <div class="selector-group">
+                <select id="yearSelect" class="selector">
+                    <!-- JavaScript로 채워질 예정 -->
+                </select>
+                <select id="monthSelect" class="selector">
+                    <option value="1">1월</option>
+                    <option value="2">2월</option>
+                    <option value="3">3월</option>
+                    <option value="4">4월</option>
+                    <option value="5">5월</option>
+                    <option value="6">6월</option>
+                    <option value="7">7월</option>
+                    <option value="8">8월</option>
+                    <option value="9">9월</option>
+                    <option value="10">10월</option>
+                    <option value="11">11월</option>
+                    <option value="12">12월</option>
+                </select>
+            </div>
+
+            <div class="nav-buttons">
+                <button id="prevMonth" class="nav-btn">◀ 이전</button>
+                <button id="nextMonth" class="nav-btn">다음 ▶</button>
+            </div>
+        </div>
+
+        <div id="calendar" class="calendar">
+            <!-- JavaScript로 달력이 생성될 예정 -->
+        </div>
+
+        <div class="actions">
+            <button id="downloadPdf" class="btn-primary">📥 PDF 다운로드 (전체 년도)</button>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
