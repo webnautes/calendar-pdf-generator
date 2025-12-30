@@ -173,19 +173,6 @@ function createMonthCalendar(year, month) {
 // PDF 생성 (한글 지원)
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-    });
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    // 제목
-    doc.setFontSize(24);
-    doc.setFont(undefined, 'bold');
-    doc.text(`${currentYear} Calendar`, pageWidth / 2, 15, { align: 'center' });
 
     // 임시 컨테이너 생성
     const tempContainer = document.createElement('div');
@@ -198,6 +185,27 @@ async function generatePDF() {
     `;
     document.body.appendChild(tempContainer);
 
+    // 전체 컨테이너 (제목 포함)
+    const mainContainer = document.createElement('div');
+    mainContainer.style.cssText = `
+        background: white;
+        padding: 30px;
+        width: 1200px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+    `;
+
+    // 제목 추가
+    const title = document.createElement('div');
+    title.style.cssText = `
+        text-align: center;
+        font-size: 36px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 30px;
+    `;
+    title.textContent = `${currentYear}년 달력`;
+    mainContainer.appendChild(title);
+
     // 12개월 그리드 컨테이너
     const gridContainer = document.createElement('div');
     gridContainer.style.cssText = `
@@ -206,7 +214,6 @@ async function generatePDF() {
         grid-template-rows: repeat(3, auto);
         gap: 15px;
         background: white;
-        padding: 20px;
     `;
 
     // 12개월 달력 생성
@@ -215,28 +222,62 @@ async function generatePDF() {
         gridContainer.appendChild(monthCalendar);
     }
 
-    tempContainer.appendChild(gridContainer);
+    mainContainer.appendChild(gridContainer);
+    tempContainer.appendChild(mainContainer);
 
     try {
+        // 폰트 로딩 대기 (중요!)
+        await document.fonts.ready;
+
+        // 추가 대기 시간 (폰트 완전 렌더링)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // html2canvas로 이미지 생성
-        const canvas = await html2canvas(gridContainer, {
+        const canvas = await html2canvas(mainContainer, {
             scale: 2,
             backgroundColor: '#ffffff',
-            logging: false
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+            letterRendering: true
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth - 20;
+
+        // PDF 생성
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // 이미지 크기 계산
+        const imgWidth = pageWidth - 10;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        // PDF에 이미지 추가
-        doc.addImage(imgData, 'PNG', 10, 25, imgWidth, imgHeight);
+        // 이미지가 페이지보다 크면 조정
+        let finalWidth = imgWidth;
+        let finalHeight = imgHeight;
+
+        if (imgHeight > pageHeight - 10) {
+            finalHeight = pageHeight - 10;
+            finalWidth = (canvas.width * finalHeight) / canvas.height;
+        }
+
+        // PDF에 이미지 추가 (중앙 정렬)
+        const x = (pageWidth - finalWidth) / 2;
+        const y = (pageHeight - finalHeight) / 2;
+
+        doc.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
 
         // PDF 다운로드
         doc.save(`calendar_${currentYear}.pdf`);
     } catch (error) {
         console.error('PDF 생성 오류:', error);
-        alert('PDF 생성 중 오류가 발생했습니다.');
+        alert('PDF 생성 중 오류가 발생했습니다: ' + error.message);
     } finally {
         // 임시 컨테이너 제거
         document.body.removeChild(tempContainer);
