@@ -31,7 +31,7 @@ function updateSelectors() {
     document.getElementById('monthSelect').value = currentMonth;
 }
 
-// 달력 렌더링
+// 달력 렌더링 (화면 표시용)
 function renderCalendar() {
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
@@ -93,35 +93,85 @@ function renderCalendar() {
     calendar.appendChild(grid);
 }
 
-// 월별 달력 데이터 생성
-function getMonthCalendarData(year, month) {
+// 특정 월의 달력 HTML 생성 (PDF용)
+function createMonthCalendar(year, month) {
+    const container = document.createElement('div');
+    container.style.cssText = `
+        background: white;
+        padding: 15px;
+        width: 280px;
+        box-sizing: border-box;
+    `;
+
+    // 월 헤더
+    const header = document.createElement('div');
+    header.style.cssText = `
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 10px;
+    `;
+    header.textContent = `${year}년 ${month}월`;
+    container.appendChild(header);
+
+    // 그리드
+    const grid = document.createElement('div');
+    grid.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    `;
+
+    // 요일 헤더
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    dayNames.forEach((day, index) => {
+        const dayHeader = document.createElement('div');
+        dayHeader.style.cssText = `
+            text-align: center;
+            padding: 5px 2px;
+            font-weight: bold;
+            font-size: 12px;
+            color: ${index === 0 ? '#e74c3c' : index === 6 ? '#3498db' : '#666'};
+        `;
+        dayHeader.textContent = day;
+        grid.appendChild(dayHeader);
+    });
+
+    // 달력 데이터
     const firstDay = new Date(year, month - 1, 1).getDay();
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    const weeks = [];
-    let week = new Array(7).fill(0);
-    let dayCounter = 1;
-
-    // 첫 주
-    for (let i = firstDay; i < 7 && dayCounter <= daysInMonth; i++) {
-        week[i] = dayCounter++;
-    }
-    weeks.push([...week]);
-
-    // 나머지 주
-    while (dayCounter <= daysInMonth) {
-        week = new Array(7).fill(0);
-        for (let i = 0; i < 7 && dayCounter <= daysInMonth; i++) {
-            week[i] = dayCounter++;
-        }
-        weeks.push([...week]);
+    // 빈 셀
+    for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.style.cssText = 'padding: 8px;';
+        grid.appendChild(emptyCell);
     }
 
-    return weeks;
+    // 날짜 셀
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        const dayOfWeek = (firstDay + day - 1) % 7;
+
+        dayCell.style.cssText = `
+            text-align: center;
+            padding: 8px 5px;
+            font-size: 12px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            color: ${dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333'};
+        `;
+        dayCell.textContent = day;
+        grid.appendChild(dayCell);
+    }
+
+    container.appendChild(grid);
+    return container;
 }
 
-// PDF 생성
-function generatePDF() {
+// PDF 생성 (한글 지원)
+async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
         orientation: 'landscape',
@@ -137,79 +187,60 @@ function generatePDF() {
     doc.setFont(undefined, 'bold');
     doc.text(`${currentYear} Calendar`, pageWidth / 2, 15, { align: 'center' });
 
-    // 12개월을 3x4 그리드로 배치
-    const cols = 4;
-    const rows = 3;
-    const marginX = 10;
-    const marginY = 25;
-    const cellWidth = (pageWidth - marginX * 2) / cols;
-    const cellHeight = (pageHeight - marginY - 10) / rows;
+    // 임시 컨테이너 생성
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        background: white;
+        padding: 20px;
+    `;
+    document.body.appendChild(tempContainer);
 
-    const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월',
-                        '7월', '8월', '9월', '10월', '11월', '12월'];
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    // 12개월 그리드 컨테이너
+    const gridContainer = document.createElement('div');
+    gridContainer.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(4, 280px);
+        grid-template-rows: repeat(3, auto);
+        gap: 15px;
+        background: white;
+        padding: 20px;
+    `;
 
+    // 12개월 달력 생성
     for (let month = 1; month <= 12; month++) {
-        const row = Math.floor((month - 1) / cols);
-        const col = (month - 1) % cols;
-
-        const x = marginX + col * cellWidth;
-        const y = marginY + row * cellHeight;
-
-        // 월 이름
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text(monthNames[month - 1], x + cellWidth / 2, y + 5, { align: 'center' });
-
-        // 요일 헤더
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'normal');
-        const dayWidth = cellWidth / 7;
-
-        dayNames.forEach((day, i) => {
-            const dayX = x + i * dayWidth + dayWidth / 2;
-            const dayY = y + 10;
-
-            // 일요일은 빨강, 토요일은 파랑
-            if (i === 0) {
-                doc.setTextColor(231, 76, 60); // 빨강
-            } else if (i === 6) {
-                doc.setTextColor(52, 152, 219); // 파랑
-            } else {
-                doc.setTextColor(0, 0, 0); // 검정
-            }
-
-            doc.text(day, dayX, dayY, { align: 'center' });
-        });
-
-        // 날짜들
-        const weeks = getMonthCalendarData(currentYear, month);
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(8);
-
-        weeks.forEach((week, weekIdx) => {
-            week.forEach((day, dayIdx) => {
-                if (day !== 0) {
-                    const dateX = x + dayIdx * dayWidth + dayWidth / 2;
-                    const dateY = y + 15 + weekIdx * 5;
-
-                    // 일요일은 빨강, 토요일은 파랑
-                    if (dayIdx === 0) {
-                        doc.setTextColor(231, 76, 60);
-                    } else if (dayIdx === 6) {
-                        doc.setTextColor(52, 152, 219);
-                    } else {
-                        doc.setTextColor(0, 0, 0);
-                    }
-
-                    doc.text(day.toString(), dateX, dateY, { align: 'center' });
-                }
-            });
-        });
+        const monthCalendar = createMonthCalendar(currentYear, month);
+        gridContainer.appendChild(monthCalendar);
     }
 
-    // PDF 다운로드
-    doc.save(`calendar_${currentYear}.pdf`);
+    tempContainer.appendChild(gridContainer);
+
+    try {
+        // html2canvas로 이미지 생성
+        const canvas = await html2canvas(gridContainer, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = pageWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // PDF에 이미지 추가
+        doc.addImage(imgData, 'PNG', 10, 25, imgWidth, imgHeight);
+
+        // PDF 다운로드
+        doc.save(`calendar_${currentYear}.pdf`);
+    } catch (error) {
+        console.error('PDF 생성 오류:', error);
+        alert('PDF 생성 중 오류가 발생했습니다.');
+    } finally {
+        // 임시 컨테이너 제거
+        document.body.removeChild(tempContainer);
+    }
 }
 
 // 이벤트 리스너 연결
@@ -249,9 +280,9 @@ function attachEventListeners() {
     });
 
     // PDF 다운로드
-    document.getElementById('downloadPdf').addEventListener('click', () => {
+    document.getElementById('downloadPdf').addEventListener('click', async () => {
         try {
-            generatePDF();
+            await generatePDF();
         } catch (error) {
             alert('PDF 생성 중 오류가 발생했습니다.');
             console.error(error);
