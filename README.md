@@ -80,23 +80,3 @@ python -m http.server 8000
 ## 📝 라이선스
 
 이 프로젝트는 MIT 라이선스를 따릅니다.
-
----
-
-## 🔙 FastAPI 버전
-
-Python FastAPI 기반 버전을 사용하려면 `main.py`를 참고하세요.
-
-<details>
-<summary>FastAPI 버전 실행 방법</summary>
-
-```bash
-# 의존성 설치
-pip install -r requirements.txt
-
-# 서버 실행
-python main.py
-```
-
-브라우저에서 `http://localhost:8000` 접속
-</details>
