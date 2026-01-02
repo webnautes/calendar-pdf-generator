@@ -493,8 +493,11 @@ function attachEventListeners() {
     });
 
     // 공휴일 표시 토글
-    document.getElementById('showHolidays').addEventListener('change', (e) => {
-        showHolidays = e.target.checked;
-        renderCalendar();
-    });
+    const holidayCheckbox = document.getElementById('showHolidays');
+    if (holidayCheckbox) {
+        holidayCheckbox.addEventListener('change', (e) => {
+            showHolidays = e.target.checked;
+            renderCalendar();
+        });
+    }
 }
