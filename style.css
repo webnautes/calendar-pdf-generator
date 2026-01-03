@@ -185,6 +185,36 @@ h1 {
     font-weight: 500;
 }
 
+.permission-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 15px;
+    background: #d1ecf1;
+    border: 1px solid #17a2b8;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.permission-details {
+    flex: 1;
+}
+
+.permission-details strong {
+    display: block;
+    font-size: 14px;
+    color: #0c5460;
+    margin-bottom: 6px;
+}
+
+.permission-details p {
+    font-size: 12px;
+    color: #0c5460;
+    line-height: 1.5;
+    margin: 4px 0;
+}
+
 .btn-google {
     padding: 12px 24px;
     font-size: 15px;
