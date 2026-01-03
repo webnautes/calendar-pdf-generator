@@ -16,6 +16,7 @@ let currentYear = today.getFullYear();
 let currentMonth = today.getMonth() + 1; // JavaScript는 0부터 시작
 let showHolidays = false; // 공휴일 표시 여부
 let showGoogleEvents = false; // 구글 이벤트 표시 여부
+let monthsPerPage = 3; // PDF 한 장당 달력 개수
 
 // 한국 고정 공휴일 (매년 동일한 날짜)
 const fixedHolidays = {
@@ -500,13 +501,13 @@ function createMonthCalendar(year, month) {
     return container;
 }
 
-// PDF 생성 (한글 지원) - A4 한 장에 3개월씩, 4페이지
+// PDF 생성 (한글 지원) - 세로 방향, 동적 개수
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
 
-    // PDF 생성
+    // PDF 생성 (세로 방향)
     const doc = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
     });
@@ -526,47 +527,52 @@ async function generatePDF() {
     document.body.appendChild(tempContainer);
 
     try {
-        // 4페이지 생성 (3개월씩)
-        for (let page = 0; page < 4; page++) {
+        const totalPages = Math.ceil(12 / monthsPerPage);
+
+        // 페이지별 생성
+        for (let page = 0; page < totalPages; page++) {
             // 페이지 컨테이너
             const pageContainer = document.createElement('div');
             pageContainer.style.cssText = `
                 background: white;
-                padding: 30px;
-                width: 1400px;
+                padding: 25px;
+                width: 800px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
             `;
 
-            const startMonth = page * 3 + 1;
-            const endMonth = Math.min(page * 3 + 3, 12);
+            const startMonth = page * monthsPerPage + 1;
+            const endMonth = Math.min(page * monthsPerPage + monthsPerPage, 12);
 
             // 제목 추가
             const title = document.createElement('div');
             title.style.cssText = `
                 text-align: center;
-                font-size: 36px;
+                font-size: 32px;
                 font-weight: bold;
                 color: #333;
-                margin-bottom: 30px;
+                margin-bottom: 25px;
             `;
-            title.textContent = `${currentYear}년 달력 (${startMonth}월 - ${endMonth}월)`;
+            if (monthsPerPage === 1) {
+                title.textContent = `${currentYear}년 ${startMonth}월`;
+            } else {
+                title.textContent = `${currentYear}년 달력 (${startMonth}월 - ${endMonth}월)`;
+            }
             pageContainer.appendChild(title);
 
-            // 3개월 그리드 컨테이너 (1x3 가로 배치)
+            // 달력 그리드 컨테이너 (세로 배치)
             const gridContainer = document.createElement('div');
             gridContainer.style.cssText = `
-                display: grid;
-                grid-template-columns: repeat(3, 440px);
-                grid-template-rows: auto;
-                gap: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: ${monthsPerPage === 1 ? '0px' : '25px'};
                 background: white;
             `;
 
-            // 3개월 달력 생성
-            for (let i = 0; i < 3; i++) {
-                const month = page * 3 + i + 1;
+            // 달력 생성
+            for (let i = 0; i < monthsPerPage; i++) {
+                const month = page * monthsPerPage + i + 1;
                 if (month <= 12) {
-                    const monthCalendar = createMonthCalendarForPDF(currentYear, month);
+                    const monthCalendar = createMonthCalendarForPDF(currentYear, month, monthsPerPage);
                     gridContainer.appendChild(monthCalendar);
                 }
             }
@@ -627,34 +633,45 @@ async function generatePDF() {
     }
 }
 
-// PDF용 큰 달력 생성 (A4에 3개씩 배치)
-function createMonthCalendarForPDF(year, month) {
+// PDF용 달력 생성 (세로 방향, 동적 크기)
+function createMonthCalendarForPDF(year, month, perPage) {
+    // 페이지당 개수에 따라 크기 조정
+    const sizeConfig = {
+        1: { width: 750, padding: 30, headerSize: 32, dayHeaderSize: 18, daySize: 20, gap: 10, cellPadding: 18, minHeight: 75 },
+        2: { width: 750, padding: 20, headerSize: 26, dayHeaderSize: 16, daySize: 16, gap: 8, cellPadding: 14, minHeight: 60 },
+        3: { width: 750, padding: 15, headerSize: 22, dayHeaderSize: 14, daySize: 14, gap: 6, cellPadding: 10, minHeight: 45 }
+    };
+
+    const config = sizeConfig[perPage] || sizeConfig[3];
+
     const container = document.createElement('div');
     container.style.cssText = `
         background: white;
-        padding: 15px;
-        width: 420px;
+        padding: ${config.padding}px;
+        width: ${config.width}px;
         box-sizing: border-box;
     `;
 
-    // 월 헤더
-    const header = document.createElement('div');
-    header.style.cssText = `
-        text-align: center;
-        font-size: 22px;
-        font-weight: bold;
-        color: #667eea;
-        margin-bottom: 12px;
-    `;
-    header.textContent = `${month}월`;
-    container.appendChild(header);
+    // 월 헤더 (1개일 때는 숨김 - 제목에 표시됨)
+    if (perPage > 1) {
+        const header = document.createElement('div');
+        header.style.cssText = `
+            text-align: center;
+            font-size: ${config.headerSize}px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: ${config.padding / 2}px;
+        `;
+        header.textContent = `${month}월`;
+        container.appendChild(header);
+    }
 
     // 그리드
     const grid = document.createElement('div');
     grid.style.cssText = `
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
+        gap: ${config.gap}px;
     `;
 
     // 요일 헤더
@@ -663,9 +680,9 @@ function createMonthCalendarForPDF(year, month) {
         const dayHeader = document.createElement('div');
         dayHeader.style.cssText = `
             text-align: center;
-            padding: 8px 3px;
+            padding: ${config.gap + 2}px ${config.gap / 2}px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: ${config.dayHeaderSize}px;
             color: ${index === 0 ? '#e74c3c' : index === 6 ? '#3498db' : '#666'};
         `;
         dayHeader.textContent = day;
@@ -679,7 +696,7 @@ function createMonthCalendarForPDF(year, month) {
     // 빈 셀
     for (let i = 0; i < firstDay; i++) {
         const emptyCell = document.createElement('div');
-        emptyCell.style.cssText = 'padding: 12px;';
+        emptyCell.style.cssText = `padding: ${config.cellPadding}px;`;
         grid.appendChild(emptyCell);
     }
 
@@ -694,16 +711,16 @@ function createMonthCalendarForPDF(year, month) {
 
         dayCell.style.cssText = `
             text-align: center;
-            padding: ${holiday || events.length > 0 ? '6px 3px' : '12px 8px'};
-            font-size: 14px;
+            padding: ${holiday || events.length > 0 ? config.cellPadding / 2 : config.cellPadding}px ${config.gap}px;
+            font-size: ${config.daySize}px;
             background: #f8f9fa;
-            border-radius: 6px;
+            border-radius: ${config.gap}px;
             color: ${textColor};
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 45px;
+            min-height: ${config.minHeight}px;
         `;
 
         const dayNum = document.createElement('span');
@@ -714,9 +731,9 @@ function createMonthCalendarForPDF(year, month) {
         if (holiday) {
             const holidayName = document.createElement('div');
             holidayName.style.cssText = `
-                font-size: 8px;
+                font-size: ${config.daySize - 6}px;
                 color: #e74c3c;
-                margin-top: 2px;
+                margin-top: ${config.gap / 3}px;
                 line-height: 1.1;
             `;
             holidayName.textContent = holiday;
@@ -727,11 +744,11 @@ function createMonthCalendarForPDF(year, month) {
         if (events.length > 0) {
             const eventDot = document.createElement('div');
             eventDot.style.cssText = `
-                width: 5px;
-                height: 5px;
+                width: ${config.gap - 1}px;
+                height: ${config.gap - 1}px;
                 background: #4285f4;
                 border-radius: 50%;
-                margin-top: 3px;
+                margin-top: ${config.gap / 2}px;
             `;
             dayCell.appendChild(eventDot);
         }
@@ -821,5 +838,13 @@ function attachEventListeners() {
     const signoutButton = document.getElementById('signoutButton');
     if (signoutButton) {
         signoutButton.addEventListener('click', handleSignoutClick);
+    }
+
+    // PDF 페이지당 개수 변경
+    const monthsPerPageSelect = document.getElementById('monthsPerPage');
+    if (monthsPerPageSelect) {
+        monthsPerPageSelect.addEventListener('change', (e) => {
+            monthsPerPage = parseInt(e.target.value);
+        });
     }
 }
