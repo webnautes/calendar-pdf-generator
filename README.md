@@ -86,3 +86,8 @@ python -m http.server 8000
 ## 📝 라이선스
 
 이 프로젝트는 MIT 라이선스를 따릅니다.
+
+## 📋 법적 문서
+
+- [개인정보처리방침](./PRIVACY_POLICY.md) - 개인정보 수집 및 사용에 대한 정책
+- [서비스 이용약관](./TERMS_OF_SERVICE.md) - 서비스 이용 시 적용되는 약관
