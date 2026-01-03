@@ -514,6 +514,44 @@ h1 {
     transform: translateY(0);
 }
 
+/* Footer 스타일 */
+.footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-links {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+.footer-separator {
+    margin: 0 10px;
+    color: white;
+    opacity: 0.6;
+}
+
+.footer-copyright {
+    font-size: 12px;
+    color: white;
+    opacity: 0.8;
+}
+
 /* 제철 음식 섹션 스타일 */
 .seasonal-foods-section {
     margin-top: 20px;
