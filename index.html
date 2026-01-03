@@ -43,6 +43,20 @@
                     <input type="checkbox" id="showHolidays">
                     <span class="checkbox-text">🇰🇷 한국 공휴일 표시</span>
                 </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showGoogleEvents" disabled>
+                    <span class="checkbox-text">📅 구글 캘린더 이벤트 표시</span>
+                </label>
+            </div>
+
+            <div class="google-auth-section">
+                <button id="authorizeButton" class="btn-google" style="display: none;">
+                    🔐 구글 캘린더 연동
+                </button>
+                <button id="signoutButton" class="btn-google-signout" style="display: none;">
+                    🚪 로그아웃
+                </button>
+                <div id="authStatus" class="auth-status"></div>
             </div>
         </div>
 
@@ -54,6 +68,11 @@
             <button id="downloadPdf" class="btn-primary">📥 PDF 다운로드 (전체 년도)</button>
         </div>
     </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google API Client Library -->
+    <script src="https://apis.google.com/js/api.js"></script>
 
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

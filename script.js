@@ -1,8 +1,21 @@
+// Google Calendar API 설정
+const CLIENT_ID = '212094760476-2gu4j66cvv709ni4e8221pvcof5ioljq.apps.googleusercontent.com';
+const API_KEY = ''; // API 키 (선택사항, OAuth만으로도 작동)
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+let accessToken = null;
+let googleEvents = {}; // 구글 캘린더 이벤트 저장
+
 // 현재 날짜
 const today = new Date();
 let currentYear = today.getFullYear();
 let currentMonth = today.getMonth() + 1; // JavaScript는 0부터 시작
 let showHolidays = false; // 공휴일 표시 여부
+let showGoogleEvents = false; // 구글 이벤트 표시 여부
 
 // 한국 고정 공휴일 (매년 동일한 날짜)
 const fixedHolidays = {
@@ -119,12 +132,145 @@ function getHoliday(year, month, day) {
     return null;
 }
 
+// Google API 초기화
+function gapiLoaded() {
+    gapi.load('client', initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+    const initConfig = {
+        discoveryDocs: [DISCOVERY_DOC],
+    };
+    if (API_KEY) {
+        initConfig.apiKey = API_KEY;
+    }
+    await gapi.client.init(initConfig);
+    gapiInited = true;
+    maybeEnableButtons();
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // 나중에 정의
+    });
+    gisInited = true;
+    maybeEnableButtons();
+}
+
+function maybeEnableButtons() {
+    if (gapiInited && gisInited) {
+        document.getElementById('authorizeButton').style.display = 'inline-block';
+    }
+}
+
+// 로그인 처리
+function handleAuthClick() {
+    tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+            throw (resp);
+        }
+        accessToken = gapi.client.getToken();
+        document.getElementById('signoutButton').style.display = 'inline-block';
+        document.getElementById('authorizeButton').style.display = 'none';
+        document.getElementById('authStatus').textContent = '✓ 구글 캘린더 연동됨';
+        document.getElementById('showGoogleEvents').disabled = false;
+
+        // 이벤트 가져오기
+        await loadCalendarEvents();
+        renderCalendar();
+    };
+
+    if (gapi.client.getToken() === null) {
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+        tokenClient.requestAccessToken({prompt: ''});
+    }
+}
+
+// 로그아웃 처리
+function handleSignoutClick() {
+    const token = gapi.client.getToken();
+    if (token !== null) {
+        google.accounts.oauth2.revoke(token.access_token);
+        gapi.client.setToken('');
+        accessToken = null;
+        googleEvents = {};
+        document.getElementById('authorizeButton').style.display = 'inline-block';
+        document.getElementById('signoutButton').style.display = 'none';
+        document.getElementById('authStatus').textContent = '';
+        document.getElementById('showGoogleEvents').checked = false;
+        document.getElementById('showGoogleEvents').disabled = true;
+        showGoogleEvents = false;
+        renderCalendar();
+    }
+}
+
+// 캘린더 이벤트 가져오기
+async function loadCalendarEvents() {
+    try {
+        const startDate = new Date(currentYear, 0, 1);
+        const endDate = new Date(currentYear, 11, 31, 23, 59, 59);
+
+        const request = {
+            'calendarId': 'primary',
+            'timeMin': startDate.toISOString(),
+            'timeMax': endDate.toISOString(),
+            'showDeleted': false,
+            'singleEvents': true,
+            'maxResults': 2500,
+            'orderBy': 'startTime',
+        };
+
+        const response = await gapi.client.calendar.events.list(request);
+        const events = response.result.items;
+
+        // 이벤트를 날짜별로 정리
+        googleEvents = {};
+        events.forEach(event => {
+            const start = event.start.dateTime || event.start.date;
+            const eventDate = new Date(start);
+            const dateKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+
+            if (!googleEvents[dateKey]) {
+                googleEvents[dateKey] = [];
+            }
+            googleEvents[dateKey].push({
+                title: event.summary || '(제목 없음)',
+                start: start,
+                allDay: !event.start.dateTime
+            });
+        });
+
+        console.log('구글 캘린더 이벤트 로드 완료:', Object.keys(googleEvents).length, '일');
+    } catch (err) {
+        console.error('이벤트 가져오기 실패:', err);
+        alert('캘린더 이벤트를 가져오는데 실패했습니다.');
+    }
+}
+
+// 특정 날짜의 구글 이벤트 가져오기
+function getGoogleEvents(year, month, day) {
+    if (!showGoogleEvents) return [];
+    const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return googleEvents[dateKey] || [];
+}
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initYearSelector();
     updateSelectors();
     renderCalendar();
     attachEventListeners();
+
+    // Google API 로드
+    if (typeof gapi !== 'undefined') {
+        gapiLoaded();
+    }
+    if (typeof google !== 'undefined') {
+        gisLoaded();
+    }
 });
 
 // 년도 선택기 초기화
@@ -193,26 +339,34 @@ function renderCalendar() {
 
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(currentYear, currentMonth, day);
+        const events = getGoogleEvents(currentYear, currentMonth, day);
 
-        // 공휴일이 있을 경우 컨테이너로 감싸기
+        // 컨테이너 생성
+        const content = document.createElement('div');
+        content.className = 'day-cell-content';
+
+        const dayNum = document.createElement('span');
+        dayNum.textContent = day;
+        content.appendChild(dayNum);
+
+        // 공휴일 표시
         if (holiday) {
-            const content = document.createElement('div');
-            content.className = 'day-cell-content';
-
-            const dayNum = document.createElement('span');
-            dayNum.textContent = day;
-            content.appendChild(dayNum);
-
             const holidayName = document.createElement('div');
             holidayName.className = 'holiday-name';
             holidayName.textContent = holiday;
             content.appendChild(holidayName);
-
-            dayCell.appendChild(content);
             dayCell.classList.add('holiday');
-        } else {
-            dayCell.textContent = day;
         }
+
+        // 구글 이벤트 점 표시
+        if (events.length > 0) {
+            const eventDot = document.createElement('div');
+            eventDot.className = 'event-dot';
+            eventDot.title = events.map(e => e.title).join('\n');
+            content.appendChild(eventDot);
+        }
+
+        dayCell.appendChild(content);
 
         if (dayOfWeek === 0 || holiday) dayCell.classList.add('sunday');
         if (dayOfWeek === 6 && !holiday) dayCell.classList.add('saturday');
@@ -291,13 +445,14 @@ function createMonthCalendar(year, month) {
         const dayCell = document.createElement('div');
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
+        const events = getGoogleEvents(year, month, day);
 
         // 공휴일이면 빨간색, 아니면 기존 색상
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
         dayCell.style.cssText = `
             text-align: center;
-            padding: ${holiday ? '4px 2px' : '8px 5px'};
+            padding: ${holiday || events.length > 0 ? '4px 2px' : '8px 5px'};
             font-size: 12px;
             background: #f8f9fa;
             border-radius: 5px;
@@ -325,6 +480,19 @@ function createMonthCalendar(year, month) {
             dayCell.appendChild(holidayName);
         }
 
+        // 구글 이벤트 점 표시
+        if (events.length > 0) {
+            const eventDot = document.createElement('div');
+            eventDot.style.cssText = `
+                width: 4px;
+                height: 4px;
+                background: #4285f4;
+                border-radius: 50%;
+                margin-top: 2px;
+            `;
+            dayCell.appendChild(eventDot);
+        }
+
         grid.appendChild(dayCell);
     }
 
@@ -332,9 +500,19 @@ function createMonthCalendar(year, month) {
     return container;
 }
 
-// PDF 생성 (한글 지원)
+// PDF 생성 (한글 지원) - A4 한 장에 4개월씩, 3페이지
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
+
+    // PDF 생성
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
     // 임시 컨테이너 생성
     const tempContainer = document.createElement('div');
@@ -347,93 +525,93 @@ async function generatePDF() {
     `;
     document.body.appendChild(tempContainer);
 
-    // 전체 컨테이너 (제목 포함)
-    const mainContainer = document.createElement('div');
-    mainContainer.style.cssText = `
-        background: white;
-        padding: 30px;
-        width: 1200px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
-    `;
-
-    // 제목 추가
-    const title = document.createElement('div');
-    title.style.cssText = `
-        text-align: center;
-        font-size: 36px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 30px;
-    `;
-    title.textContent = `${currentYear}년 달력`;
-    mainContainer.appendChild(title);
-
-    // 12개월 그리드 컨테이너
-    const gridContainer = document.createElement('div');
-    gridContainer.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(4, 280px);
-        grid-template-rows: repeat(3, auto);
-        gap: 15px;
-        background: white;
-    `;
-
-    // 12개월 달력 생성
-    for (let month = 1; month <= 12; month++) {
-        const monthCalendar = createMonthCalendar(currentYear, month);
-        gridContainer.appendChild(monthCalendar);
-    }
-
-    mainContainer.appendChild(gridContainer);
-    tempContainer.appendChild(mainContainer);
-
     try {
-        // 폰트 로딩 대기 (중요!)
-        await document.fonts.ready;
+        // 3페이지 생성 (4개월씩)
+        for (let page = 0; page < 3; page++) {
+            // 페이지 컨테이너
+            const pageContainer = document.createElement('div');
+            pageContainer.style.cssText = `
+                background: white;
+                padding: 30px;
+                width: 1200px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+            `;
 
-        // 추가 대기 시간 (폰트 완전 렌더링)
-        await new Promise(resolve => setTimeout(resolve, 100));
+            // 제목 추가
+            const title = document.createElement('div');
+            title.style.cssText = `
+                text-align: center;
+                font-size: 36px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 30px;
+            `;
+            title.textContent = `${currentYear}년 달력 (${page * 4 + 1}월 - ${page * 4 + 4}월)`;
+            pageContainer.appendChild(title);
 
-        // html2canvas로 이미지 생성
-        const canvas = await html2canvas(mainContainer, {
-            scale: 2,
-            backgroundColor: '#ffffff',
-            logging: false,
-            useCORS: true,
-            allowTaint: true,
-            letterRendering: true
-        });
+            // 4개월 그리드 컨테이너 (2x2)
+            const gridContainer = document.createElement('div');
+            gridContainer.style.cssText = `
+                display: grid;
+                grid-template-columns: repeat(2, 550px);
+                grid-template-rows: repeat(2, auto);
+                gap: 30px;
+                background: white;
+            `;
 
-        const imgData = canvas.toDataURL('image/png');
+            // 4개월 달력 생성
+            for (let i = 0; i < 4; i++) {
+                const month = page * 4 + i + 1;
+                if (month <= 12) {
+                    const monthCalendar = createMonthCalendarForPDF(currentYear, month);
+                    gridContainer.appendChild(monthCalendar);
+                }
+            }
 
-        // PDF 생성
-        const doc = new jsPDF({
-            orientation: 'landscape',
-            unit: 'mm',
-            format: 'a4'
-        });
+            pageContainer.appendChild(gridContainer);
+            tempContainer.appendChild(pageContainer);
 
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
+            // 폰트 로딩 대기
+            await document.fonts.ready;
+            await new Promise(resolve => setTimeout(resolve, 100));
 
-        // 이미지 크기 계산
-        const imgWidth = pageWidth - 10;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            // html2canvas로 이미지 생성
+            const canvas = await html2canvas(pageContainer, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: true,
+                allowTaint: true,
+                letterRendering: true
+            });
 
-        // 이미지가 페이지보다 크면 조정
-        let finalWidth = imgWidth;
-        let finalHeight = imgHeight;
+            const imgData = canvas.toDataURL('image/png');
 
-        if (imgHeight > pageHeight - 10) {
-            finalHeight = pageHeight - 10;
-            finalWidth = (canvas.width * finalHeight) / canvas.height;
+            // 이미지 크기 계산
+            const imgWidth = pageWidth - 10;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            let finalWidth = imgWidth;
+            let finalHeight = imgHeight;
+
+            if (imgHeight > pageHeight - 10) {
+                finalHeight = pageHeight - 10;
+                finalWidth = (canvas.width * finalHeight) / canvas.height;
+            }
+
+            // PDF에 이미지 추가 (중앙 정렬)
+            const x = (pageWidth - finalWidth) / 2;
+            const y = (pageHeight - finalHeight) / 2;
+
+            if (page > 0) {
+                doc.addPage();
+            }
+
+            doc.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+
+            // 페이지 컨테이너 제거 (다음 페이지를 위해)
+            tempContainer.removeChild(pageContainer);
         }
-
-        // PDF에 이미지 추가 (중앙 정렬)
-        const x = (pageWidth - finalWidth) / 2;
-        const y = (pageHeight - finalHeight) / 2;
-
-        doc.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
 
         // PDF 다운로드
         doc.save(`calendar_${currentYear}.pdf`);
@@ -446,11 +624,131 @@ async function generatePDF() {
     }
 }
 
+// PDF용 큰 달력 생성 (A4에 4개씩 배치)
+function createMonthCalendarForPDF(year, month) {
+    const container = document.createElement('div');
+    container.style.cssText = `
+        background: white;
+        padding: 20px;
+        width: 530px;
+        box-sizing: border-box;
+    `;
+
+    // 월 헤더
+    const header = document.createElement('div');
+    header.style.cssText = `
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 15px;
+    `;
+    header.textContent = `${month}월`;
+    container.appendChild(header);
+
+    // 그리드
+    const grid = document.createElement('div');
+    grid.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    `;
+
+    // 요일 헤더
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    dayNames.forEach((day, index) => {
+        const dayHeader = document.createElement('div');
+        dayHeader.style.cssText = `
+            text-align: center;
+            padding: 10px 5px;
+            font-weight: bold;
+            font-size: 16px;
+            color: ${index === 0 ? '#e74c3c' : index === 6 ? '#3498db' : '#666'};
+        `;
+        dayHeader.textContent = day;
+        grid.appendChild(dayHeader);
+    });
+
+    // 달력 데이터
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // 빈 셀
+    for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.style.cssText = 'padding: 15px;';
+        grid.appendChild(emptyCell);
+    }
+
+    // 날짜 셀
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        const dayOfWeek = (firstDay + day - 1) % 7;
+        const holiday = getHoliday(year, month, day);
+        const events = getGoogleEvents(year, month, day);
+
+        const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
+
+        dayCell.style.cssText = `
+            text-align: center;
+            padding: ${holiday || events.length > 0 ? '8px 5px' : '15px 10px'};
+            font-size: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: ${textColor};
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        `;
+
+        const dayNum = document.createElement('span');
+        dayNum.textContent = day;
+        dayCell.appendChild(dayNum);
+
+        // 공휴일 이름 표시
+        if (holiday) {
+            const holidayName = document.createElement('div');
+            holidayName.style.cssText = `
+                font-size: 10px;
+                color: #e74c3c;
+                margin-top: 3px;
+                line-height: 1.2;
+            `;
+            holidayName.textContent = holiday;
+            dayCell.appendChild(holidayName);
+        }
+
+        // 구글 이벤트 점 표시
+        if (events.length > 0) {
+            const eventDot = document.createElement('div');
+            eventDot.style.cssText = `
+                width: 6px;
+                height: 6px;
+                background: #4285f4;
+                border-radius: 50%;
+                margin-top: 4px;
+            `;
+            dayCell.appendChild(eventDot);
+        }
+
+        grid.appendChild(dayCell);
+    }
+
+    container.appendChild(grid);
+    return container;
+}
+
 // 이벤트 리스너 연결
 function attachEventListeners() {
     // 년도 변경
-    document.getElementById('yearSelect').addEventListener('change', (e) => {
+    document.getElementById('yearSelect').addEventListener('change', async (e) => {
         currentYear = parseInt(e.target.value);
+        // 구글 캘린더 연동 중이면 이벤트 다시 로드
+        if (accessToken) {
+            await loadCalendarEvents();
+        }
         renderCalendar();
     });
 
@@ -499,5 +797,26 @@ function attachEventListeners() {
             showHolidays = e.target.checked;
             renderCalendar();
         });
+    }
+
+    // 구글 이벤트 표시 토글
+    const googleEventsCheckbox = document.getElementById('showGoogleEvents');
+    if (googleEventsCheckbox) {
+        googleEventsCheckbox.addEventListener('change', (e) => {
+            showGoogleEvents = e.target.checked;
+            renderCalendar();
+        });
+    }
+
+    // 구글 로그인 버튼
+    const authorizeButton = document.getElementById('authorizeButton');
+    if (authorizeButton) {
+        authorizeButton.addEventListener('click', handleAuthClick);
+    }
+
+    // 구글 로그아웃 버튼
+    const signoutButton = document.getElementById('signoutButton');
+    if (signoutButton) {
+        signoutButton.addEventListener('click', handleSignoutClick);
     }
 }
