@@ -673,14 +673,55 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCalendar();
     attachEventListeners();
 
-    // Google API 로드
-    if (typeof gapi !== 'undefined') {
-        gapiLoaded();
-    }
-    if (typeof google !== 'undefined') {
-        gisLoaded();
-    }
+    // Google API 로드 (스크립트 로딩 대기)
+    initGoogleAPIs();
 });
+
+// Google API 초기화 (스크립트 로딩 대기)
+function initGoogleAPIs() {
+    let gapiReady = false;
+    let gisReady = false;
+
+    // gapi 체크
+    function checkGapi() {
+        if (typeof gapi !== 'undefined' && !gapiReady) {
+            gapiReady = true;
+            gapiLoaded();
+        }
+    }
+
+    // GIS(google.accounts) 체크
+    function checkGis() {
+        if (typeof google !== 'undefined' && google.accounts && !gisReady) {
+            gisReady = true;
+            gisLoaded();
+        }
+    }
+
+    // 즉시 체크
+    checkGapi();
+    checkGis();
+
+    // 아직 로드되지 않았으면 폴링
+    if (!gapiReady || !gisReady) {
+        const maxAttempts = 50; // 최대 5초 대기
+        let attempts = 0;
+
+        const interval = setInterval(() => {
+            attempts++;
+
+            if (!gapiReady) checkGapi();
+            if (!gisReady) checkGis();
+
+            if ((gapiReady && gisReady) || attempts >= maxAttempts) {
+                clearInterval(interval);
+                if (attempts >= maxAttempts && (!gapiReady || !gisReady)) {
+                    console.warn('Google API 로드 시간 초과. 페이지를 새로고침해 주세요.');
+                }
+            }
+        }, 100);
+    }
+}
 
 // 년도 선택기 초기화
 function initYearSelector() {
