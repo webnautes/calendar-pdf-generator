@@ -500,7 +500,7 @@ function createMonthCalendar(year, month) {
     return container;
 }
 
-// PDF 생성 (한글 지원) - A4 한 장에 4개월씩, 3페이지
+// PDF 생성 (한글 지원) - A4 한 장에 3개월씩, 4페이지
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
 
@@ -526,16 +526,19 @@ async function generatePDF() {
     document.body.appendChild(tempContainer);
 
     try {
-        // 3페이지 생성 (4개월씩)
-        for (let page = 0; page < 3; page++) {
+        // 4페이지 생성 (3개월씩)
+        for (let page = 0; page < 4; page++) {
             // 페이지 컨테이너
             const pageContainer = document.createElement('div');
             pageContainer.style.cssText = `
                 background: white;
                 padding: 30px;
-                width: 1200px;
+                width: 1400px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
             `;
+
+            const startMonth = page * 3 + 1;
+            const endMonth = Math.min(page * 3 + 3, 12);
 
             // 제목 추가
             const title = document.createElement('div');
@@ -546,22 +549,22 @@ async function generatePDF() {
                 color: #333;
                 margin-bottom: 30px;
             `;
-            title.textContent = `${currentYear}년 달력 (${page * 4 + 1}월 - ${page * 4 + 4}월)`;
+            title.textContent = `${currentYear}년 달력 (${startMonth}월 - ${endMonth}월)`;
             pageContainer.appendChild(title);
 
-            // 4개월 그리드 컨테이너 (2x2)
+            // 3개월 그리드 컨테이너 (1x3 가로 배치)
             const gridContainer = document.createElement('div');
             gridContainer.style.cssText = `
                 display: grid;
-                grid-template-columns: repeat(2, 550px);
-                grid-template-rows: repeat(2, auto);
-                gap: 30px;
+                grid-template-columns: repeat(3, 440px);
+                grid-template-rows: auto;
+                gap: 20px;
                 background: white;
             `;
 
-            // 4개월 달력 생성
-            for (let i = 0; i < 4; i++) {
-                const month = page * 4 + i + 1;
+            // 3개월 달력 생성
+            for (let i = 0; i < 3; i++) {
+                const month = page * 3 + i + 1;
                 if (month <= 12) {
                     const monthCalendar = createMonthCalendarForPDF(currentYear, month);
                     gridContainer.appendChild(monthCalendar);
@@ -624,13 +627,13 @@ async function generatePDF() {
     }
 }
 
-// PDF용 큰 달력 생성 (A4에 4개씩 배치)
+// PDF용 큰 달력 생성 (A4에 3개씩 배치)
 function createMonthCalendarForPDF(year, month) {
     const container = document.createElement('div');
     container.style.cssText = `
         background: white;
-        padding: 20px;
-        width: 530px;
+        padding: 15px;
+        width: 420px;
         box-sizing: border-box;
     `;
 
@@ -638,10 +641,10 @@ function createMonthCalendarForPDF(year, month) {
     const header = document.createElement('div');
     header.style.cssText = `
         text-align: center;
-        font-size: 24px;
+        font-size: 22px;
         font-weight: bold;
         color: #667eea;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     `;
     header.textContent = `${month}월`;
     container.appendChild(header);
@@ -651,7 +654,7 @@ function createMonthCalendarForPDF(year, month) {
     grid.style.cssText = `
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
+        gap: 6px;
     `;
 
     // 요일 헤더
@@ -660,9 +663,9 @@ function createMonthCalendarForPDF(year, month) {
         const dayHeader = document.createElement('div');
         dayHeader.style.cssText = `
             text-align: center;
-            padding: 10px 5px;
+            padding: 8px 3px;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             color: ${index === 0 ? '#e74c3c' : index === 6 ? '#3498db' : '#666'};
         `;
         dayHeader.textContent = day;
@@ -676,7 +679,7 @@ function createMonthCalendarForPDF(year, month) {
     // 빈 셀
     for (let i = 0; i < firstDay; i++) {
         const emptyCell = document.createElement('div');
-        emptyCell.style.cssText = 'padding: 15px;';
+        emptyCell.style.cssText = 'padding: 12px;';
         grid.appendChild(emptyCell);
     }
 
@@ -691,16 +694,16 @@ function createMonthCalendarForPDF(year, month) {
 
         dayCell.style.cssText = `
             text-align: center;
-            padding: ${holiday || events.length > 0 ? '8px 5px' : '15px 10px'};
-            font-size: 16px;
+            padding: ${holiday || events.length > 0 ? '6px 3px' : '12px 8px'};
+            font-size: 14px;
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
             color: ${textColor};
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 50px;
+            min-height: 45px;
         `;
 
         const dayNum = document.createElement('span');
@@ -711,10 +714,10 @@ function createMonthCalendarForPDF(year, month) {
         if (holiday) {
             const holidayName = document.createElement('div');
             holidayName.style.cssText = `
-                font-size: 10px;
+                font-size: 8px;
                 color: #e74c3c;
-                margin-top: 3px;
-                line-height: 1.2;
+                margin-top: 2px;
+                line-height: 1.1;
             `;
             holidayName.textContent = holiday;
             dayCell.appendChild(holidayName);
@@ -724,11 +727,11 @@ function createMonthCalendarForPDF(year, month) {
         if (events.length > 0) {
             const eventDot = document.createElement('div');
             eventDot.style.cssText = `
-                width: 6px;
-                height: 6px;
+                width: 5px;
+                height: 5px;
                 background: #4285f4;
                 border-radius: 50%;
-                margin-top: 4px;
+                margin-top: 3px;
             `;
             dayCell.appendChild(eventDot);
         }
