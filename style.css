@@ -97,6 +97,7 @@ h1 {
     background: #f8f9fa;
     border-radius: 10px;
     transition: all 0.3s;
+    margin-bottom: 10px;
 }
 
 .checkbox-label:hover {
@@ -110,10 +111,88 @@ h1 {
     cursor: pointer;
 }
 
+.checkbox-label input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 .checkbox-text {
     font-size: 15px;
     font-weight: 500;
     color: #333;
+}
+
+.google-auth-section {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.btn-google {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    background: #4285f4;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+    margin-bottom: 10px;
+}
+
+.btn-google:hover {
+    background: #357ae8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.btn-google-signout {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 2px solid #dc3545;
+    border-radius: 10px;
+    background: white;
+    color: #dc3545;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.btn-google-signout:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.auth-status {
+    font-size: 14px;
+    color: #28a745;
+    font-weight: 500;
+    padding: 8px;
+}
+
+.event-marker {
+    width: 6px;
+    height: 6px;
+    background: #4285f4;
+    border-radius: 50%;
+    margin-top: 2px;
+}
+
+.day-cell .events-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.day-cell .event-dot {
+    width: 4px;
+    height: 4px;
+    background: #4285f4;
+    border-radius: 50%;
+    margin-top: 2px;
 }
 
 .calendar {
