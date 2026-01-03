@@ -637,9 +637,9 @@ async function generatePDF() {
 function createMonthCalendarForPDF(year, month, perPage) {
     // 페이지당 개수에 따라 크기 조정
     const sizeConfig = {
-        1: { width: 750, padding: 30, headerSize: 32, dayHeaderSize: 18, daySize: 20, gap: 10, cellPadding: 18, minHeight: 75 },
-        2: { width: 750, padding: 20, headerSize: 26, dayHeaderSize: 16, daySize: 16, gap: 8, cellPadding: 14, minHeight: 60 },
-        3: { width: 750, padding: 15, headerSize: 22, dayHeaderSize: 14, daySize: 14, gap: 6, cellPadding: 10, minHeight: 45 }
+        1: { width: 750, padding: 30, headerSize: 32, dayHeaderSize: 18, daySize: 18, gap: 10, cellPadding: 18, minHeight: 90 },
+        2: { width: 750, padding: 20, headerSize: 26, dayHeaderSize: 16, daySize: 15, gap: 8, cellPadding: 14, minHeight: 70 },
+        3: { width: 750, padding: 15, headerSize: 22, dayHeaderSize: 14, daySize: 13, gap: 6, cellPadding: 10, minHeight: 55 }
     };
 
     const config = sizeConfig[perPage] || sizeConfig[3];
@@ -710,45 +710,55 @@ function createMonthCalendarForPDF(year, month, perPage) {
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
         dayCell.style.cssText = `
-            text-align: center;
-            padding: ${holiday || events.length > 0 ? config.cellPadding / 2 : config.cellPadding}px ${config.gap}px;
-            font-size: ${config.daySize}px;
+            padding: ${config.gap}px;
             background: #f8f9fa;
             border-radius: ${config.gap}px;
-            color: ${textColor};
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             min-height: ${config.minHeight}px;
+            position: relative;
+            box-sizing: border-box;
         `;
 
-        const dayNum = document.createElement('span');
+        // 날짜 숫자 (왼쪽 위)
+        const dayNum = document.createElement('div');
+        dayNum.style.cssText = `
+            position: absolute;
+            top: ${config.gap / 2}px;
+            left: ${config.gap / 2}px;
+            font-size: ${config.daySize}px;
+            font-weight: 600;
+            color: ${textColor};
+            line-height: 1;
+        `;
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
 
-        // 공휴일 이름 표시
+        // 공휴일 이름 표시 (날짜 아래)
         if (holiday) {
             const holidayName = document.createElement('div');
             holidayName.style.cssText = `
+                position: absolute;
+                top: ${config.gap / 2 + config.daySize + 2}px;
+                left: ${config.gap / 2}px;
                 font-size: ${config.daySize - 6}px;
                 color: #e74c3c;
-                margin-top: ${config.gap / 3}px;
                 line-height: 1.1;
+                font-weight: 500;
             `;
             holidayName.textContent = holiday;
             dayCell.appendChild(holidayName);
         }
 
-        // 구글 이벤트 점 표시
+        // 구글 이벤트 점 표시 (오른쪽 위)
         if (events.length > 0) {
             const eventDot = document.createElement('div');
             eventDot.style.cssText = `
-                width: ${config.gap - 1}px;
-                height: ${config.gap - 1}px;
+                position: absolute;
+                top: ${config.gap}px;
+                right: ${config.gap}px;
+                width: ${config.gap - 2}px;
+                height: ${config.gap - 2}px;
                 background: #4285f4;
                 border-radius: 50%;
-                margin-top: ${config.gap / 2}px;
             `;
             dayCell.appendChild(eventDot);
         }
