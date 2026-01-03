@@ -232,7 +232,7 @@ async function loadCalendarList() {
     try {
         const response = await gapi.client.calendar.calendarList.list({
             'showDeleted': false,
-            'showHidden': true  // 숨겨진 캘린더도 표시
+            'showHidden': false  // 숨긴 캘린더는 표시 안함
         });
 
         calendarList = response.result.items || [];
