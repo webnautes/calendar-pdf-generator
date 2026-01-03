@@ -180,6 +180,11 @@ function handleAuthClick() {
 
         // 이벤트 가져오기
         await loadCalendarEvents();
+
+        // 자동으로 이벤트 표시 활성화
+        document.getElementById('showGoogleEvents').checked = true;
+        showGoogleEvents = true;
+
         renderCalendar();
     };
 
