@@ -855,6 +855,80 @@ function renderCalendar() {
     }
 
     calendar.appendChild(grid);
+
+    // 1개월 보기 시 제철 음식 표시
+    if (monthsPerPage === 1 && seasonalFoods[currentMonth]) {
+        const foodSection = renderSeasonalFoods(currentMonth);
+        calendar.appendChild(foodSection);
+    }
+}
+
+// 제철 음식 섹션 렌더링 (웹용)
+function renderSeasonalFoods(month) {
+    const foodData = seasonalFoods[month];
+
+    const section = document.createElement('div');
+    section.className = 'seasonal-foods-section';
+
+    // 안내 메시지
+    const notice = document.createElement('div');
+    notice.className = 'seasonal-foods-notice';
+    notice.innerHTML = '🍽️ <strong>1개월 보기 모드</strong>에서는 제철 음식 정보가 PDF에도 포함됩니다!';
+    section.appendChild(notice);
+
+    // 제목
+    const title = document.createElement('div');
+    title.className = 'seasonal-foods-title';
+    title.textContent = `🍽️ ${foodData.title}`;
+    section.appendChild(title);
+
+    // 설명
+    const desc = document.createElement('div');
+    desc.className = 'seasonal-foods-desc';
+    desc.textContent = foodData.description;
+    section.appendChild(desc);
+
+    // 카테고리별 음식 목록
+    const categoriesContainer = document.createElement('div');
+    categoriesContainer.className = 'seasonal-foods-categories';
+
+    foodData.categories.forEach(category => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'seasonal-category';
+
+        const categoryName = document.createElement('div');
+        categoryName.className = 'seasonal-category-name';
+        categoryName.textContent = category.name;
+        categoryDiv.appendChild(categoryName);
+
+        category.items.forEach(item => {
+            const foodItem = document.createElement('div');
+            foodItem.className = 'seasonal-food-item';
+
+            const foodName = document.createElement('span');
+            foodName.className = 'seasonal-food-name';
+            foodName.textContent = item.food;
+
+            const foodReason = document.createElement('span');
+            foodReason.className = 'seasonal-food-reason';
+            foodReason.textContent = item.reason;
+
+            const foodNutrition = document.createElement('span');
+            foodNutrition.className = 'seasonal-food-nutrition';
+            foodNutrition.textContent = item.nutrition;
+
+            foodItem.appendChild(foodName);
+            foodItem.appendChild(foodReason);
+            foodItem.appendChild(foodNutrition);
+            categoryDiv.appendChild(foodItem);
+        });
+
+        categoriesContainer.appendChild(categoryDiv);
+    });
+
+    section.appendChild(categoriesContainer);
+
+    return section;
 }
 
 // 특정 월의 달력 HTML 생성 (PDF용)
@@ -1464,6 +1538,7 @@ function attachEventListeners() {
     if (monthsPerPageSelect) {
         monthsPerPageSelect.addEventListener('change', (e) => {
             monthsPerPage = parseInt(e.target.value);
+            renderCalendar(); // 제철 음식 표시를 위해 다시 렌더링
         });
     }
 
