@@ -9,6 +9,8 @@ let gapiInited = false;
 let gisInited = false;
 let accessToken = null;
 let googleEvents = {}; // 구글 캘린더 이벤트 저장
+let calendarList = []; // 사용 가능한 캘린더 목록
+let selectedCalendars = new Set(); // 선택된 캘린더 ID 목록
 
 // 현재 날짜
 const today = new Date();
@@ -178,6 +180,9 @@ function handleAuthClick() {
         document.getElementById('authStatus').textContent = '✓ 구글 캘린더 연동됨';
         document.getElementById('showGoogleEvents').disabled = false;
 
+        // 캘린더 목록 먼저 가져오기
+        await loadCalendarList();
+
         // 이벤트 가져오기
         await loadCalendarEvents();
 
@@ -203,49 +208,162 @@ function handleSignoutClick() {
         gapi.client.setToken('');
         accessToken = null;
         googleEvents = {};
+        calendarList = [];
+        selectedCalendars.clear();
         document.getElementById('authorizeButton').style.display = 'inline-block';
         document.getElementById('signoutButton').style.display = 'none';
         document.getElementById('authStatus').textContent = '';
         document.getElementById('showGoogleEvents').checked = false;
         document.getElementById('showGoogleEvents').disabled = true;
         showGoogleEvents = false;
+
+        // 캘린더 선택 UI 숨기기
+        const calendarSelector = document.getElementById('calendarSelector');
+        if (calendarSelector) {
+            calendarSelector.style.display = 'none';
+        }
+
         renderCalendar();
     }
 }
 
-// 캘린더 이벤트 가져오기
+// 캘린더 목록 가져오기
+async function loadCalendarList() {
+    try {
+        const response = await gapi.client.calendar.calendarList.list({
+            'showDeleted': false,
+            'showHidden': false
+        });
+
+        calendarList = response.result.items || [];
+
+        // 기본적으로 모든 캘린더 선택
+        selectedCalendars.clear();
+        calendarList.forEach(cal => {
+            selectedCalendars.add(cal.id);
+        });
+
+        // 캘린더 선택 UI 업데이트
+        renderCalendarSelector();
+
+        console.log('캘린더 목록 로드 완료:', calendarList.length, '개');
+        return calendarList;
+    } catch (err) {
+        console.error('캘린더 목록 가져오기 실패:', err);
+        return [];
+    }
+}
+
+// 캘린더 선택 UI 렌더링
+function renderCalendarSelector() {
+    const container = document.getElementById('calendarList');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    calendarList.forEach(calendar => {
+        const item = document.createElement('label');
+        item.className = 'calendar-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = calendar.id;
+        checkbox.checked = selectedCalendars.has(calendar.id);
+        checkbox.addEventListener('change', async (e) => {
+            if (e.target.checked) {
+                selectedCalendars.add(calendar.id);
+            } else {
+                selectedCalendars.delete(calendar.id);
+            }
+            // 이벤트 다시 로드
+            await loadCalendarEvents();
+            renderCalendar();
+        });
+
+        const colorDot = document.createElement('span');
+        colorDot.className = 'calendar-color-dot';
+        colorDot.style.backgroundColor = calendar.backgroundColor || '#4285f4';
+
+        const name = document.createElement('span');
+        name.className = 'calendar-name';
+        name.textContent = calendar.summary || '(이름 없음)';
+
+        item.appendChild(checkbox);
+        item.appendChild(colorDot);
+        item.appendChild(name);
+        container.appendChild(item);
+    });
+
+    // 캘린더 선택 영역 표시
+    const calendarSelector = document.getElementById('calendarSelector');
+    if (calendarSelector && calendarList.length > 0) {
+        calendarSelector.style.display = 'block';
+    }
+}
+
+// 캘린더 이벤트 가져오기 (선택된 모든 캘린더에서)
 async function loadCalendarEvents() {
     try {
         const startDate = new Date(currentYear, 0, 1);
         const endDate = new Date(currentYear, 11, 31, 23, 59, 59);
 
-        const request = {
-            'calendarId': 'primary',
-            'timeMin': startDate.toISOString(),
-            'timeMax': endDate.toISOString(),
-            'showDeleted': false,
-            'singleEvents': true,
-            'maxResults': 2500,
-            'orderBy': 'startTime',
-        };
+        // 이벤트 초기화
+        googleEvents = {};
 
-        const response = await gapi.client.calendar.events.list(request);
-        const events = response.result.items;
+        // 선택된 캘린더가 없으면 종료
+        if (selectedCalendars.size === 0) {
+            console.log('선택된 캘린더가 없습니다.');
+            return;
+        }
+
+        // 선택된 각 캘린더에서 이벤트 가져오기
+        const calendarPromises = Array.from(selectedCalendars).map(async (calendarId) => {
+            try {
+                const calendar = calendarList.find(cal => cal.id === calendarId);
+                const calendarColor = calendar ? (calendar.backgroundColor || '#4285f4') : '#4285f4';
+
+                const request = {
+                    'calendarId': calendarId,
+                    'timeMin': startDate.toISOString(),
+                    'timeMax': endDate.toISOString(),
+                    'showDeleted': false,
+                    'singleEvents': true,
+                    'maxResults': 2500,
+                    'orderBy': 'startTime',
+                };
+
+                const response = await gapi.client.calendar.events.list(request);
+                return {
+                    calendarId,
+                    calendarColor,
+                    calendarName: calendar ? calendar.summary : calendarId,
+                    events: response.result.items || []
+                };
+            } catch (err) {
+                console.error(`캘린더 ${calendarId} 이벤트 가져오기 실패:`, err);
+                return { calendarId, calendarColor: '#4285f4', events: [] };
+            }
+        });
+
+        const results = await Promise.all(calendarPromises);
 
         // 이벤트를 날짜별로 정리
-        googleEvents = {};
-        events.forEach(event => {
-            const start = event.start.dateTime || event.start.date;
-            const eventDate = new Date(start);
-            const dateKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+        results.forEach(({ calendarColor, calendarName, events }) => {
+            events.forEach(event => {
+                const start = event.start.dateTime || event.start.date;
+                const eventDate = new Date(start);
+                const dateKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
 
-            if (!googleEvents[dateKey]) {
-                googleEvents[dateKey] = [];
-            }
-            googleEvents[dateKey].push({
-                title: event.summary || '(제목 없음)',
-                start: start,
-                allDay: !event.start.dateTime
+                if (!googleEvents[dateKey]) {
+                    googleEvents[dateKey] = [];
+                }
+                googleEvents[dateKey].push({
+                    title: event.summary || '(제목 없음)',
+                    start: start,
+                    allDay: !event.start.dateTime,
+                    color: event.colorId ? getEventColor(event.colorId) : calendarColor,
+                    calendarName: calendarName
+                });
             });
         });
 
@@ -254,6 +372,24 @@ async function loadCalendarEvents() {
         console.error('이벤트 가져오기 실패:', err);
         alert('캘린더 이벤트를 가져오는데 실패했습니다.');
     }
+}
+
+// Google Calendar 이벤트 색상 ID를 실제 색상으로 변환
+function getEventColor(colorId) {
+    const colors = {
+        '1': '#7986cb',  // Lavender
+        '2': '#33b679',  // Sage
+        '3': '#8e24aa',  // Grape
+        '4': '#e67c73',  // Flamingo
+        '5': '#f6bf26',  // Banana
+        '6': '#f4511e',  // Tangerine
+        '7': '#039be5',  // Peacock
+        '8': '#616161',  // Graphite
+        '9': '#3f51b5',  // Blueberry
+        '10': '#0b8043', // Basil
+        '11': '#d50000'  // Tomato
+    };
+    return colors[colorId] || '#4285f4';
 }
 
 // 특정 날짜의 구글 이벤트 가져오기
@@ -364,12 +500,26 @@ function renderCalendar() {
             dayCell.classList.add('holiday');
         }
 
-        // 구글 이벤트 점 표시
+        // 구글 이벤트 점 표시 (캘린더별 색상)
         if (events.length > 0) {
-            const eventDot = document.createElement('div');
-            eventDot.className = 'event-dot';
-            eventDot.title = events.map(e => e.title).join('\n');
-            content.appendChild(eventDot);
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'event-dots-container';
+
+            // 최대 3개의 점만 표시 (더 많으면 ... 표시)
+            const maxDots = 3;
+            const uniqueColors = [...new Set(events.map(e => e.color || '#4285f4'))];
+            const displayColors = uniqueColors.slice(0, maxDots);
+
+            displayColors.forEach(color => {
+                const eventDot = document.createElement('div');
+                eventDot.className = 'event-dot';
+                eventDot.style.backgroundColor = color;
+                dotsContainer.appendChild(eventDot);
+            });
+
+            // 툴팁에 모든 이벤트 표시
+            dotsContainer.title = events.map(e => `[${e.calendarName || '캘린더'}] ${e.title}`).join('\n');
+            content.appendChild(dotsContainer);
         }
 
         dayCell.appendChild(content);
@@ -753,19 +903,27 @@ function createMonthCalendarForPDF(year, month, perPage) {
             dayCell.appendChild(holidayName);
         }
 
-        // 구글 이벤트 점 표시 (오른쪽 위)
+        // 구글 이벤트 점 표시 (오른쪽 위, 캘린더별 색상)
         if (events.length > 0) {
-            const eventDot = document.createElement('div');
-            eventDot.style.cssText = `
-                position: absolute;
-                top: ${config.gap}px;
-                right: ${config.gap}px;
-                width: ${config.gap - 2}px;
-                height: ${config.gap - 2}px;
-                background: #4285f4;
-                border-radius: 50%;
-            `;
-            dayCell.appendChild(eventDot);
+            const uniqueColors = [...new Set(events.map(e => e.color || '#4285f4'))];
+            const maxDots = 3;
+            const displayColors = uniqueColors.slice(0, maxDots);
+            const dotSize = Math.max(config.gap - 4, 4);
+            const dotGap = 2;
+
+            displayColors.forEach((color, index) => {
+                const eventDot = document.createElement('div');
+                eventDot.style.cssText = `
+                    position: absolute;
+                    top: ${config.gap}px;
+                    right: ${config.gap + index * (dotSize + dotGap)}px;
+                    width: ${dotSize}px;
+                    height: ${dotSize}px;
+                    background: ${color};
+                    border-radius: 50%;
+                `;
+                dayCell.appendChild(eventDot);
+            });
         }
 
         grid.appendChild(dayCell);
@@ -861,5 +1019,26 @@ function attachEventListeners() {
         monthsPerPageSelect.addEventListener('change', (e) => {
             monthsPerPage = parseInt(e.target.value);
         });
+    }
+
+    // 캘린더 목록 토글 버튼
+    const toggleCalendarListBtn = document.getElementById('toggleCalendarList');
+    const calendarListContainer = document.getElementById('calendarList');
+    if (toggleCalendarListBtn && calendarListContainer) {
+        toggleCalendarListBtn.addEventListener('click', () => {
+            calendarListContainer.classList.toggle('collapsed');
+            toggleCalendarListBtn.classList.toggle('collapsed');
+            toggleCalendarListBtn.textContent = calendarListContainer.classList.contains('collapsed') ? '▶' : '▼';
+        });
+
+        // 헤더 클릭해도 토글
+        const calendarSelectorHeader = document.querySelector('.calendar-selector-header');
+        if (calendarSelectorHeader) {
+            calendarSelectorHeader.addEventListener('click', (e) => {
+                if (e.target !== toggleCalendarListBtn) {
+                    toggleCalendarListBtn.click();
+                }
+            });
+        }
     }
 }
