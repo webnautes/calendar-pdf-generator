@@ -122,6 +122,42 @@ h1 {
     color: #333;
 }
 
+.pdf-options {
+    margin-top: 15px;
+}
+
+.pdf-option-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.option-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+.pdf-selector {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 150px;
+}
+
+.pdf-selector:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
 .google-auth-section {
     margin-top: 15px;
     text-align: center;
