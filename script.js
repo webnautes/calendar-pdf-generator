@@ -232,7 +232,7 @@ async function loadCalendarList() {
     try {
         const response = await gapi.client.calendar.calendarList.list({
             'showDeleted': false,
-            'showHidden': false
+            'showHidden': true  // 숨겨진 캘린더도 표시
         });
 
         calendarList = response.result.items || [];
@@ -247,6 +247,7 @@ async function loadCalendarList() {
         renderCalendarSelector();
 
         console.log('캘린더 목록 로드 완료:', calendarList.length, '개');
+        console.log('캘린더 목록:', calendarList.map(c => c.summary));
         return calendarList;
     } catch (err) {
         console.error('캘린더 목록 가져오기 실패:', err);
