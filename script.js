@@ -488,6 +488,7 @@ function renderCalendar() {
         content.className = 'day-cell-content';
 
         const dayNum = document.createElement('span');
+        dayNum.className = 'day-number';
         dayNum.textContent = day;
         content.appendChild(dayNum);
 
@@ -500,26 +501,34 @@ function renderCalendar() {
             dayCell.classList.add('holiday');
         }
 
-        // 구글 이벤트 점 표시 (캘린더별 색상)
+        // 구글 이벤트 텍스트로 표시
         if (events.length > 0) {
-            const dotsContainer = document.createElement('div');
-            dotsContainer.className = 'event-dots-container';
+            const eventsList = document.createElement('div');
+            eventsList.className = 'events-list';
 
-            // 최대 3개의 점만 표시 (더 많으면 ... 표시)
-            const maxDots = 3;
-            const uniqueColors = [...new Set(events.map(e => e.color || '#4285f4'))];
-            const displayColors = uniqueColors.slice(0, maxDots);
+            // 최대 3개의 이벤트 표시
+            const maxEvents = 3;
+            const displayEvents = events.slice(0, maxEvents);
 
-            displayColors.forEach(color => {
-                const eventDot = document.createElement('div');
-                eventDot.className = 'event-dot';
-                eventDot.style.backgroundColor = color;
-                dotsContainer.appendChild(eventDot);
+            displayEvents.forEach(event => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'event-item';
+                eventItem.style.backgroundColor = event.color || '#4285f4';
+                eventItem.textContent = event.title;
+                eventItem.title = `[${event.calendarName || '캘린더'}] ${event.title}`;
+                eventsList.appendChild(eventItem);
             });
 
-            // 툴팁에 모든 이벤트 표시
-            dotsContainer.title = events.map(e => `[${e.calendarName || '캘린더'}] ${e.title}`).join('\n');
-            content.appendChild(dotsContainer);
+            // 더 많은 이벤트가 있으면 표시
+            if (events.length > maxEvents) {
+                const moreEvents = document.createElement('div');
+                moreEvents.className = 'more-events';
+                moreEvents.textContent = `+${events.length - maxEvents}개 더보기`;
+                moreEvents.title = events.slice(maxEvents).map(e => `[${e.calendarName || '캘린더'}] ${e.title}`).join('\n');
+                eventsList.appendChild(moreEvents);
+            }
+
+            content.appendChild(eventsList);
         }
 
         dayCell.appendChild(content);
@@ -792,9 +801,9 @@ async function generatePDF() {
 function createMonthCalendarForPDF(year, month, perPage) {
     // 페이지당 개수에 따라 크기 조정
     const sizeConfig = {
-        1: { width: 750, padding: 30, headerSize: 32, dayHeaderSize: 18, daySize: 18, gap: 10, cellPadding: 18, minHeight: 90 },
-        2: { width: 750, padding: 20, headerSize: 26, dayHeaderSize: 16, daySize: 15, gap: 8, cellPadding: 14, minHeight: 70 },
-        3: { width: 750, padding: 15, headerSize: 22, dayHeaderSize: 14, daySize: 13, gap: 6, cellPadding: 10, minHeight: 55 }
+        1: { width: 750, padding: 30, headerSize: 32, dayHeaderSize: 18, daySize: 14, gap: 10, cellPadding: 18, minHeight: 110 },
+        2: { width: 750, padding: 20, headerSize: 26, dayHeaderSize: 16, daySize: 13, gap: 8, cellPadding: 14, minHeight: 85 },
+        3: { width: 750, padding: 15, headerSize: 22, dayHeaderSize: 14, daySize: 12, gap: 6, cellPadding: 10, minHeight: 70 }
     };
 
     const config = sizeConfig[perPage] || sizeConfig[3];
@@ -903,27 +912,49 @@ function createMonthCalendarForPDF(year, month, perPage) {
             dayCell.appendChild(holidayName);
         }
 
-        // 구글 이벤트 점 표시 (오른쪽 위, 캘린더별 색상)
+        // 구글 이벤트 텍스트로 표시
         if (events.length > 0) {
-            const uniqueColors = [...new Set(events.map(e => e.color || '#4285f4'))];
-            const maxDots = 3;
-            const displayColors = uniqueColors.slice(0, maxDots);
-            const dotSize = Math.max(config.gap - 4, 4);
-            const dotGap = 2;
+            const eventFontSize = Math.max(config.daySize - 6, 7);
+            const eventTop = holiday
+                ? config.gap / 2 + config.daySize + eventFontSize + 4
+                : config.gap / 2 + config.daySize + 4;
+            const maxEvents = perPage === 1 ? 3 : (perPage === 2 ? 2 : 2);
+            const displayEvents = events.slice(0, maxEvents);
 
-            displayColors.forEach((color, index) => {
-                const eventDot = document.createElement('div');
-                eventDot.style.cssText = `
+            displayEvents.forEach((event, index) => {
+                const eventItem = document.createElement('div');
+                eventItem.style.cssText = `
                     position: absolute;
-                    top: ${config.gap}px;
-                    right: ${config.gap + index * (dotSize + dotGap)}px;
-                    width: ${dotSize}px;
-                    height: ${dotSize}px;
-                    background: ${color};
-                    border-radius: 50%;
+                    top: ${eventTop + index * (eventFontSize + 3)}px;
+                    left: ${config.gap / 2}px;
+                    right: ${config.gap / 2}px;
+                    font-size: ${eventFontSize}px;
+                    color: white;
+                    background: ${event.color || '#4285f4'};
+                    padding: 1px 3px;
+                    border-radius: 2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    line-height: 1.2;
                 `;
-                dayCell.appendChild(eventDot);
+                eventItem.textContent = event.title;
+                dayCell.appendChild(eventItem);
             });
+
+            // 더 많은 이벤트 표시
+            if (events.length > maxEvents) {
+                const moreItem = document.createElement('div');
+                moreItem.style.cssText = `
+                    position: absolute;
+                    top: ${eventTop + maxEvents * (eventFontSize + 3)}px;
+                    left: ${config.gap / 2}px;
+                    font-size: ${eventFontSize - 1}px;
+                    color: #666;
+                `;
+                moreItem.textContent = `+${events.length - maxEvents}개`;
+                dayCell.appendChild(moreItem);
+            }
         }
 
         grid.appendChild(dayCell);
