@@ -514,6 +514,102 @@ h1 {
     transform: translateY(0);
 }
 
+/* 제철 음식 섹션 스타일 */
+.seasonal-foods-section {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid #ddd;
+}
+
+.seasonal-foods-notice {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.seasonal-foods-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 8px;
+}
+
+.seasonal-foods-desc {
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.seasonal-foods-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.seasonal-category {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.seasonal-category-name {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 12px;
+    padding-left: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.seasonal-food-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.seasonal-food-item:last-child {
+    margin-bottom: 0;
+}
+
+.seasonal-food-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #667eea;
+    min-width: 70px;
+    flex-shrink: 0;
+}
+
+.seasonal-food-reason {
+    font-size: 13px;
+    color: #555;
+    flex: 1;
+    line-height: 1.4;
+}
+
+.seasonal-food-nutrition {
+    font-size: 11px;
+    color: #888;
+    background: #e9ecef;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 /* 모바일 최적화 */
 @media (max-width: 480px) {
     .container {
@@ -540,5 +636,40 @@ h1 {
     .btn-primary {
         width: 100%;
         padding: 15px;
+    }
+
+    /* 제철 음식 모바일 스타일 */
+    .seasonal-foods-section {
+        padding: 15px;
+    }
+
+    .seasonal-foods-notice {
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+
+    .seasonal-foods-title {
+        font-size: 17px;
+    }
+
+    .seasonal-foods-desc {
+        font-size: 12px;
+    }
+
+    .seasonal-food-item {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .seasonal-food-name {
+        font-size: 13px;
+    }
+
+    .seasonal-food-reason {
+        font-size: 12px;
+    }
+
+    .seasonal-food-nutrition {
+        align-self: flex-start;
     }
 }
