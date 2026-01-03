@@ -116,6 +116,70 @@ const lunarHolidays = {
     }
 };
 
+// 월별 제철 음식 데이터 (한국)
+const seasonalFoods = {
+    1: {
+        title: '1월 제철 음식',
+        foods: ['굴', '꼬막', '삼치', '명태', '대구', '과메기', '한라봉', '귤', '시금치', '우엉'],
+        description: '겨울철 해산물과 뿌리채소가 맛있는 시기'
+    },
+    2: {
+        title: '2월 제철 음식',
+        foods: ['굴', '꼬막', '도미', '대구', '삼치', '딸기', '시금치', '냉이', '달래', '봄동'],
+        description: '이른 봄나물이 나오기 시작하는 시기'
+    },
+    3: {
+        title: '3월 제철 음식',
+        foods: ['주꾸미', '도다리', '바지락', '키조개', '냉이', '달래', '씀바귀', '두릅', '미나리', '딸기'],
+        description: '봄나물과 조개류가 풍부한 시기'
+    },
+    4: {
+        title: '4월 제철 음식',
+        foods: ['주꾸미', '소라', '멍게', '미더덕', '도다리', '참나물', '두릅', '취나물', '더덕', '딸기'],
+        description: '봄철 해산물과 산나물의 계절'
+    },
+    5: {
+        title: '5월 제철 음식',
+        foods: ['멍게', '미더덕', '전복', '한치', '병어', '매실', '체리', '참외', '오이', '양배추'],
+        description: '초여름 과일이 나오기 시작하는 시기'
+    },
+    6: {
+        title: '6월 제철 음식',
+        foods: ['전복', '오징어', '장어', '참치', '매실', '자두', '수박', '참외', '살구', '감자'],
+        description: '여름 과일과 해산물이 풍부한 시기'
+    },
+    7: {
+        title: '7월 제철 음식',
+        foods: ['장어', '전복', '민어', '농어', '수박', '복숭아', '자두', '포도', '옥수수', '고구마순'],
+        description: '보양식과 여름 과일의 계절'
+    },
+    8: {
+        title: '8월 제철 음식',
+        foods: ['전복', '낙지', '새우', '광어', '포도', '복숭아', '배', '자두', '토마토', '가지'],
+        description: '해산물과 과일이 가장 풍부한 시기'
+    },
+    9: {
+        title: '9월 제철 음식',
+        foods: ['꽃게', '대하', '전어', '고등어', '배', '사과', '포도', '무화과', '고구마', '밤'],
+        description: '가을 해산물과 과일의 시작'
+    },
+    10: {
+        title: '10월 제철 음식',
+        foods: ['대하', '꽃게', '전어', '갈치', '고등어', '사과', '배', '감', '밤', '버섯'],
+        description: '제철 해산물과 단풍철 과일'
+    },
+    11: {
+        title: '11월 제철 음식',
+        foods: ['굴', '과메기', '대게', '아귀', '삼치', '귤', '사과', '배', '유자', '무'],
+        description: '겨울 준비 음식과 해산물'
+    },
+    12: {
+        title: '12월 제철 음식',
+        foods: ['굴', '꼬막', '대게', '과메기', '삼치', '귤', '한라봉', '사과', '배추', '무'],
+        description: '겨울철 보양 해산물과 저장 채소'
+    }
+};
+
 // 특정 날짜의 공휴일 정보 가져오기
 function getHoliday(year, month, day) {
     if (!showHolidays) return null;
@@ -962,6 +1026,64 @@ function createMonthCalendarForPDF(year, month, perPage) {
     }
 
     container.appendChild(grid);
+
+    // 1장짜리 PDF일 때 제철 음식 추천 섹션 추가
+    if (perPage === 1 && seasonalFoods[month]) {
+        const foodSection = document.createElement('div');
+        foodSection.style.cssText = `
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        `;
+
+        const foodTitle = document.createElement('div');
+        foodTitle.style.cssText = `
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        `;
+        foodTitle.textContent = `🍽️ ${seasonalFoods[month].title}`;
+        foodSection.appendChild(foodTitle);
+
+        const foodDesc = document.createElement('div');
+        foodDesc.style.cssText = `
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 10px;
+            font-style: italic;
+        `;
+        foodDesc.textContent = seasonalFoods[month].description;
+        foodSection.appendChild(foodDesc);
+
+        const foodList = document.createElement('div');
+        foodList.style.cssText = `
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        `;
+
+        seasonalFoods[month].foods.forEach(food => {
+            const foodItem = document.createElement('span');
+            foodItem.style.cssText = `
+                background: white;
+                padding: 5px 12px;
+                border-radius: 15px;
+                font-size: 12px;
+                color: #333;
+                border: 1px solid #ddd;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            `;
+            foodItem.textContent = food;
+            foodList.appendChild(foodItem);
+        });
+
+        foodSection.appendChild(foodList);
+        container.appendChild(foodSection);
+    }
+
     return container;
 }
 
