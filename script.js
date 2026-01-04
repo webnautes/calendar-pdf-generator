@@ -1179,6 +1179,7 @@ function createMonthCalendar(year, month) {
 
 // PDF 생성 (한글 지원) - 세로 방향, 동적 개수
 async function generatePDF() {
+    alert('[Debug] generatePDF 함수 시작!');
     const { jsPDF } = window.jspdf;
 
     // PDF 생성 (세로 방향)
@@ -1630,6 +1631,7 @@ function attachEventListeners() {
 
     // PDF 다운로드
     document.getElementById('downloadPdf').addEventListener('click', async () => {
+        alert('[Debug] PDF 다운로드 버튼 클릭됨!');
         try {
             await generatePDF();
         } catch (error) {
