@@ -668,7 +668,7 @@ function getGoogleEvents(year, month, day) {
 
 // Google Apps Script API URL (배포 후 실제 URL로 교체 필요)
 // APPS_SCRIPT_SETUP.md 파일 참고하여 설정하세요
-const STATS_API_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const STATS_API_URL = 'https://script.google.com/macros/s/AKfycbyy329R1fEkfOFjFr92rLna91fOoMsNruhCu2nH6oZNRFNE9FwZDnylRyEDT3M1k6DwrQ/exec';
 
 // PDF 다운로드 카운터 초기화 및 관리
 async function initPdfCounter() {
