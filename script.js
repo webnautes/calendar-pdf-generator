@@ -671,12 +671,52 @@ function initPdfCounter() {
     // localStorage에서 카운트 가져오기
     const count = localStorage.getItem('pdfDownloadCount') || 0;
     updatePdfCountDisplay(count);
+
+    // 마지막 생성 시간 가져오기
+    const lastTime = localStorage.getItem('lastPdfTime');
+    updateLastPdfTimeDisplay(lastTime);
 }
 
 function updatePdfCountDisplay(count) {
     const counterElement = document.getElementById('pdfDownloadCount');
     if (counterElement) {
         counterElement.textContent = parseInt(count).toLocaleString('ko-KR');
+    }
+}
+
+function updateLastPdfTimeDisplay(timestamp) {
+    const timeElement = document.getElementById('lastPdfTime');
+    if (!timeElement) return;
+
+    if (!timestamp) {
+        timeElement.textContent = '-';
+        return;
+    }
+
+    const date = new Date(parseInt(timestamp));
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    // 상대적 시간 표시
+    if (diffMins < 1) {
+        timeElement.textContent = '방금 전';
+    } else if (diffMins < 60) {
+        timeElement.textContent = `${diffMins}분 전`;
+    } else if (diffHours < 24) {
+        timeElement.textContent = `${diffHours}시간 전`;
+    } else if (diffDays < 7) {
+        timeElement.textContent = `${diffDays}일 전`;
+    } else {
+        // 일주일 이상이면 날짜로 표시
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        timeElement.textContent = `${year}-${month}-${day} ${hours}:${minutes}`;
     }
 }
 
@@ -687,13 +727,18 @@ function incrementPdfCounter() {
     // 카운트 증가
     count++;
 
+    // 현재 시간 저장
+    const now = Date.now();
+
     // localStorage에 저장
     localStorage.setItem('pdfDownloadCount', count);
+    localStorage.setItem('lastPdfTime', now);
 
     // 화면에 표시
     updatePdfCountDisplay(count);
+    updateLastPdfTimeDisplay(now);
 
-    console.log(`PDF 생성 횟수: ${count}회`);
+    console.log(`PDF 생성 횟수: ${count}회, 시간: ${new Date(now).toLocaleString('ko-KR')}`);
 }
 
 // 페이지 로드 시 초기화
