@@ -755,14 +755,18 @@ function updateLastPdfTimeDisplay(timestamp) {
 }
 
 async function incrementPdfCounter() {
+    console.log('[Mobile Debug] incrementPdfCounter 함수 호출됨!');
+
     // Apps Script URL이 설정되지 않은 경우
     if (!STATS_API_URL || STATS_API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
         console.log('Apps Script URL이 설정되지 않음');
+        alert('[Debug] Apps Script URL이 설정되지 않음');
         return;
     }
 
     try {
         console.log('[Mobile Debug] POST 요청 시작...');
+        alert('[Debug] POST 요청 시작');
 
         // Apps Script로 카운터 증가 요청
         const response = await fetch(STATS_API_URL, {
@@ -1306,7 +1310,7 @@ async function generatePDF() {
         }
 
         // PDF 생성 시도 카운터 증가 (성공/실패 여부와 관계없이)
-        incrementPdfCounter();
+        await incrementPdfCounter();
     }
 }
 
