@@ -1203,15 +1203,17 @@ async function generatePDF() {
 
         // PDF 다운로드
         doc.save(`calendar_${currentYear}.pdf`);
-
-        // PDF 생성 카운터 증가
-        incrementPdfCounter();
     } catch (error) {
         console.error('PDF 생성 오류:', error);
         alert('PDF 생성 중 오류가 발생했습니다: ' + error.message);
     } finally {
         // 임시 컨테이너 제거
-        document.body.removeChild(tempContainer);
+        if (tempContainer && tempContainer.parentNode) {
+            document.body.removeChild(tempContainer);
+        }
+
+        // PDF 생성 시도 카운터 증가 (성공/실패 여부와 관계없이)
+        incrementPdfCounter();
     }
 }
 
