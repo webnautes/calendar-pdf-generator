@@ -756,25 +756,15 @@ async function incrementPdfCounter() {
 
     try {
         // Apps Script로 카운터 증가 요청
-        const response = await fetch(STATS_API_URL, {
+        await fetch(STATS_API_URL, {
             method: 'POST'
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-            updatePdfCountDisplay(data.count);
-            updateLastPdfTimeDisplay(data.timestamp);
-            console.log(`PDF 생성 횟수: ${data.count}회, 시간: ${new Date(data.timestamp).toLocaleString('ko-KR')}`);
-        } else {
-            console.error('카운터 증가 실패:', data.error);
-            // 실패 시 GET으로 최신 데이터 가져오기
-            await fetchPdfStats();
-        }
+        // POST 후 페이지 새로고침으로 최신 통계 표시
+        location.reload();
     } catch (error) {
         console.error('카운터 증가 에러:', error);
-        // 에러 발생 시 GET으로 최신 데이터 가져오기 (POST는 성공했을 수 있음)
-        await fetchPdfStats();
+        // 에러가 발생해도 새로고침 (POST는 성공했을 수 있음)
+        location.reload();
     }
 }
 
