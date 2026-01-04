@@ -690,8 +690,7 @@ async function fetchPdfStats() {
         console.log('[Mobile Debug] GET 요청 시작...');
 
         const response = await fetch(STATS_API_URL, {
-            method: 'GET',
-            mode: 'cors'
+            method: 'GET'
         });
 
         console.log('[Mobile Debug] GET 응답 받음, 상태:', response.status);
@@ -770,8 +769,7 @@ async function incrementPdfCounter() {
 
         // Apps Script로 카운터 증가 요청
         const response = await fetch(STATS_API_URL, {
-            method: 'POST',
-            mode: 'cors'
+            method: 'POST'
         });
 
         console.log('[Mobile Debug] 응답 받음, 상태:', response.status);
