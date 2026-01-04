@@ -586,31 +586,12 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 8px;
-    padding: 8px 15px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    display: inline-flex;
+    margin-bottom: 10px;
 }
 
-.visitor-icon {
-    font-size: 16px;
-}
-
-.visitor-text {
-    font-size: 13px;
-    color: white;
-    font-weight: 500;
-}
-
-.visitor-number {
-    font-size: 14px;
-    color: white;
-    font-weight: 700;
-    min-width: 30px;
-    text-align: center;
+.visitor-counter img {
+    height: 22px;
+    border-radius: 3px;
 }
 
 /* 제철 음식 섹션 스타일 */

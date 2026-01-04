@@ -666,31 +666,23 @@ function getGoogleEvents(year, month, day) {
     return googleEvents[dateKey] || [];
 }
 
-// 방문자 카운터 초기화 (CountAPI 사용)
-async function initVisitorCounter() {
+// 방문자 카운터 초기화 (hits.seeyoufarm.com 사용)
+function initVisitorCounter() {
     const visitorCountElement = document.getElementById('visitorCount');
+    const visitorContainer = document.querySelector('.visitor-counter');
 
     try {
-        // CountAPI를 사용하여 방문자 수 증가 및 조회
-        // 프로젝트별 고유 키 사용
-        const namespace = 'calendar-pdf-generator';
-        const key = 'webnautes-visitor-count';
+        // hits.seeyoufarm.com을 사용하여 방문자 수 표시
+        // 이미지를 숨기고 SVG를 파싱하여 숫자만 표시하는 방법 대신
+        // 이미지를 직접 표시하는 방식 사용
 
-        // 방문자 수 증가 및 현재 값 가져오기
-        const response = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+        const pageUrl = 'https://webnautes.github.io/calendar-pdf-generator';
+        const hitsUrl = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${encodeURIComponent(pageUrl)}&count_bg=%23667EEA&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false`;
 
-        if (!response.ok) {
-            throw new Error('방문자 수를 가져오는데 실패했습니다.');
-        }
-
-        const data = await response.json();
-
-        // 방문자 수 표시 (천 단위 구분 기호 추가)
-        if (data && data.value !== undefined) {
-            visitorCountElement.textContent = data.value.toLocaleString('ko-KR');
-        } else {
-            visitorCountElement.textContent = '오류';
-        }
+        // 기존 텍스트 방식 대신 이미지 배지 사용
+        visitorContainer.innerHTML = `
+            <img src="${hitsUrl}" alt="방문자 수" style="height: 20px; vertical-align: middle;">
+        `;
     } catch (error) {
         console.error('방문자 카운터 오류:', error);
         visitorCountElement.textContent = '오류';
