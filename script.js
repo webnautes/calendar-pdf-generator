@@ -668,7 +668,6 @@ function getGoogleEvents(year, month, day) {
 
 // 방문자 카운터 초기화 (hits.seeyoufarm.com 사용)
 function initVisitorCounter() {
-    const visitorCountElement = document.getElementById('visitorCount');
     const visitorContainer = document.querySelector('.visitor-counter');
 
     try {
@@ -685,7 +684,9 @@ function initVisitorCounter() {
         `;
     } catch (error) {
         console.error('방문자 카운터 오류:', error);
-        visitorCountElement.textContent = '오류';
+        if (visitorContainer) {
+            visitorContainer.innerHTML = '<span style="color: white; font-size: 12px;">방문자 카운터 오류</span>';
+        }
     }
 }
 
