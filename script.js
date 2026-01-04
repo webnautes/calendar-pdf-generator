@@ -666,28 +666,34 @@ function getGoogleEvents(year, month, day) {
     return googleEvents[dateKey] || [];
 }
 
-// 방문자 카운터 초기화 (hits.seeyoufarm.com 사용)
-function initVisitorCounter() {
-    const visitorContainer = document.querySelector('.visitor-counter');
+// PDF 다운로드 카운터 초기화 및 관리
+function initPdfCounter() {
+    // localStorage에서 카운트 가져오기
+    const count = localStorage.getItem('pdfDownloadCount') || 0;
+    updatePdfCountDisplay(count);
+}
 
-    try {
-        // hits.seeyoufarm.com을 사용하여 방문자 수 표시
-        // 이미지를 숨기고 SVG를 파싱하여 숫자만 표시하는 방법 대신
-        // 이미지를 직접 표시하는 방식 사용
-
-        const pageUrl = 'https://webnautes.github.io/calendar-pdf-generator';
-        const hitsUrl = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${encodeURIComponent(pageUrl)}&count_bg=%23667EEA&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false`;
-
-        // 기존 텍스트 방식 대신 이미지 배지 사용
-        visitorContainer.innerHTML = `
-            <img src="${hitsUrl}" alt="방문자 수" style="height: 20px; vertical-align: middle;">
-        `;
-    } catch (error) {
-        console.error('방문자 카운터 오류:', error);
-        if (visitorContainer) {
-            visitorContainer.innerHTML = '<span style="color: white; font-size: 12px;">방문자 카운터 오류</span>';
-        }
+function updatePdfCountDisplay(count) {
+    const counterElement = document.getElementById('pdfDownloadCount');
+    if (counterElement) {
+        counterElement.textContent = parseInt(count).toLocaleString('ko-KR');
     }
+}
+
+function incrementPdfCounter() {
+    // 현재 카운트 가져오기
+    let count = parseInt(localStorage.getItem('pdfDownloadCount') || 0);
+
+    // 카운트 증가
+    count++;
+
+    // localStorage에 저장
+    localStorage.setItem('pdfDownloadCount', count);
+
+    // 화면에 표시
+    updatePdfCountDisplay(count);
+
+    console.log(`PDF 생성 횟수: ${count}회`);
 }
 
 // 페이지 로드 시 초기화
@@ -699,6 +705,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Google API 로드 (스크립트 로딩 대기)
     initGoogleAPIs();
+
+    // PDF 카운터 초기화
+    initPdfCounter();
 });
 
 // Google API 초기화 (스크립트 로딩 대기)
@@ -1194,6 +1203,9 @@ async function generatePDF() {
 
         // PDF 다운로드
         doc.save(`calendar_${currentYear}.pdf`);
+
+        // PDF 생성 카운터 증가
+        incrementPdfCounter();
     } catch (error) {
         console.error('PDF 생성 오류:', error);
         alert('PDF 생성 중 오류가 발생했습니다: ' + error.message);
