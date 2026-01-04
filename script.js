@@ -698,6 +698,7 @@ async function fetchPdfStats() {
             updatePdfCountDisplay(data.count);
             updateLastPdfTimeDisplay(data.timestamp);
             console.log(`전체 PDF 생성 횟수: ${data.count}회`);
+            console.log(`마지막 생성 시간 (timestamp): ${data.timestamp}`);
         } else {
             console.error('통계 조회 실패:', data.error);
             updatePdfCountDisplay(0);
@@ -721,12 +722,20 @@ function updateLastPdfTimeDisplay(timestamp) {
     const timeElement = document.getElementById('lastPdfTime');
     if (!timeElement) return;
 
-    if (!timestamp) {
+    // timestamp 유효성 검사
+    const numTimestamp = Number(timestamp);
+    if (!numTimestamp || numTimestamp <= 0 || isNaN(numTimestamp)) {
         timeElement.textContent = '-';
         return;
     }
 
-    const date = new Date(parseInt(timestamp));
+    const date = new Date(numTimestamp);
+
+    // 유효한 날짜인지 확인
+    if (isNaN(date.getTime())) {
+        timeElement.textContent = '-';
+        return;
+    }
 
     // 날짜와 시간 표시 (YYYY-MM-DD HH:MM:SS 형식)
     const year = date.getFullYear();
