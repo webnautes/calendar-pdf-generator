@@ -699,9 +699,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Google API 로드 (스크립트 로딩 대기)
     initGoogleAPIs();
-
-    // 방문자 카운터 초기화
-    initVisitorCounter();
 });
 
 // Google API 초기화 (스크립트 로딩 대기)
