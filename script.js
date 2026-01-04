@@ -759,12 +759,16 @@ async function incrementPdfCounter() {
         await fetch(STATS_API_URL, {
             method: 'POST'
         });
-        // POST 후 페이지 새로고침으로 최신 통계 표시
-        location.reload();
+        // PDF 다운로드 완료 후 2초 뒤 페이지 새로고침
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
     } catch (error) {
         console.error('카운터 증가 에러:', error);
-        // 에러가 발생해도 새로고침 (POST는 성공했을 수 있음)
-        location.reload();
+        // 에러가 발생해도 2초 뒤 새로고침 (POST는 성공했을 수 있음)
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
     }
 }
 
