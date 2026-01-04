@@ -694,30 +694,16 @@ function updateLastPdfTimeDisplay(timestamp) {
     }
 
     const date = new Date(parseInt(timestamp));
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
 
-    // 상대적 시간 표시
-    if (diffMins < 1) {
-        timeElement.textContent = '방금 전';
-    } else if (diffMins < 60) {
-        timeElement.textContent = `${diffMins}분 전`;
-    } else if (diffHours < 24) {
-        timeElement.textContent = `${diffHours}시간 전`;
-    } else if (diffDays < 7) {
-        timeElement.textContent = `${diffDays}일 전`;
-    } else {
-        // 일주일 이상이면 날짜로 표시
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        timeElement.textContent = `${year}-${month}-${day} ${hours}:${minutes}`;
-    }
+    // 날짜와 시간 표시 (YYYY-MM-DD HH:MM:SS 형식)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    timeElement.textContent = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 function incrementPdfCounter() {
