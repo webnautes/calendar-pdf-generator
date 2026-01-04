@@ -687,12 +687,17 @@ async function fetchPdfStats() {
     }
 
     try {
+        console.log('[Mobile Debug] GET 요청 시작...');
+
         const response = await fetch(STATS_API_URL, {
             method: 'GET',
             mode: 'cors'
         });
 
+        console.log('[Mobile Debug] GET 응답 받음, 상태:', response.status);
+
         const data = await response.json();
+        console.log('[Mobile Debug] GET 데이터:', JSON.stringify(data));
 
         if (data.success) {
             updatePdfCountDisplay(data.count);
@@ -706,6 +711,7 @@ async function fetchPdfStats() {
         }
     } catch (error) {
         console.error('통계 조회 에러:', error);
+        alert('GET 에러: ' + error.message);
         updatePdfCountDisplay(0);
         updateLastPdfTimeDisplay(null);
     }
@@ -756,13 +762,18 @@ async function incrementPdfCounter() {
     }
 
     try {
+        console.log('[Mobile Debug] POST 요청 시작...');
+
         // Apps Script로 카운터 증가 요청
         const response = await fetch(STATS_API_URL, {
             method: 'POST',
             mode: 'cors'
         });
 
+        console.log('[Mobile Debug] 응답 받음, 상태:', response.status);
+
         const data = await response.json();
+        console.log('[Mobile Debug] 데이터 파싱 완료:', JSON.stringify(data));
 
         if (data.success) {
             updatePdfCountDisplay(data.count);
@@ -770,9 +781,11 @@ async function incrementPdfCounter() {
             console.log(`PDF 생성 횟수: ${data.count}회, 시간: ${new Date(data.timestamp).toLocaleString('ko-KR')}`);
         } else {
             console.error('카운터 증가 실패:', data.error);
+            alert('카운터 증가 실패: ' + data.error);
         }
     } catch (error) {
         console.error('카운터 증가 에러:', error);
+        alert('카운터 증가 에러: ' + error.message);
     }
 }
 
