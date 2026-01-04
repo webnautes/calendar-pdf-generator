@@ -57,6 +57,21 @@
 3. **캘린더 선택**: 표시할 캘린더를 선택/해제
 4. **일정 확인**: 웹 화면과 PDF 모두에서 일정 확인 가능
 
+## 📊 통계 기능 설정 (선택사항)
+
+전체 사용자의 PDF 생성 통계를 표시하려면 Google Apps Script를 설정해야 합니다.
+
+**설정하지 않으면**: 각 사용자의 브라우저에서 개인 통계만 표시됩니다 (localStorage 사용).
+
+**설정하면**: 모든 사용자가 공유하는 전체 PDF 생성 횟수가 표시됩니다.
+
+상세한 설정 방법은 [APPS_SCRIPT_SETUP.md](./APPS_SCRIPT_SETUP.md) 파일을 참고하세요.
+
+**간단 요약:**
+1. Google Sheets 생성
+2. Apps Script 코드 배포
+3. `script.js`에 웹앱 URL 설정
+
 ## 🏗️ 프로젝트 구조
 
 ```
@@ -68,6 +83,7 @@ calendar-pdf-generator/
 ├── terms-of-service.html   # 이용약관 페이지
 ├── PRIVACY_POLICY.md       # 개인정보처리방침 (마크다운)
 ├── TERMS_OF_SERVICE.md     # 이용약관 (마크다운)
+├── APPS_SCRIPT_SETUP.md    # Google Apps Script 설정 가이드
 └── README.md
 ```
 
