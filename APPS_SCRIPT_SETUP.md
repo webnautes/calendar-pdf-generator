@@ -67,26 +67,15 @@ function doGet(e) {
 
     // 현재 카운트 가져오기
     var count = sheet.getRange('A1').getValue() || 0;
-    var timestampValue = sheet.getRange('A2').getValue();
 
-    // timestamp를 숫자로 변환 (모든 경우 처리)
+    // timestamp를 getDisplayValue()로 문자열로 가져온 후 숫자 변환
+    var timestampStr = sheet.getRange('A2').getDisplayValue();
     var timestamp = 0;
 
-    if (timestampValue !== null && timestampValue !== undefined && timestampValue !== '') {
-      // 이미 숫자인 경우
-      if (typeof timestampValue === 'number') {
-        timestamp = timestampValue;
-      }
-      // Date 객체인 경우
-      else if (Object.prototype.toString.call(timestampValue) === '[object Date]') {
-        timestamp = timestampValue.getTime();
-      }
-      // 문자열인 경우
-      else {
-        var parsed = Number(timestampValue);
-        if (!isNaN(parsed) && parsed > 0) {
-          timestamp = parsed;
-        }
+    if (timestampStr && timestampStr !== '') {
+      var parsed = parseFloat(timestampStr);
+      if (!isNaN(parsed) && parsed > 0) {
+        timestamp = parsed;
       }
     }
 
