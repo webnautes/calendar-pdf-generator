@@ -30,15 +30,18 @@ function doPost(e) {
     // 카운트 증가
     count++;
 
+    // 현재 시간 (timestamp로 저장)
+    var now = new Date().getTime();
+
     // 스프레드시트 업데이트
     sheet.getRange('A1').setValue(count);
-    sheet.getRange('A2').setValue(new Date());
+    sheet.getRange('A2').setValue(now);  // timestamp를 숫자로 저장
 
     // 응답 반환
     var result = {
       success: true,
       count: count,
-      timestamp: new Date().getTime()
+      timestamp: now
     };
 
     return ContentService
@@ -64,12 +67,7 @@ function doGet(e) {
 
     // 현재 카운트 가져오기
     var count = sheet.getRange('A1').getValue() || 0;
-    var lastUpdate = sheet.getRange('A2').getValue();
-
-    var timestamp = 0;
-    if (lastUpdate && lastUpdate instanceof Date) {
-      timestamp = lastUpdate.getTime();
-    }
+    var timestamp = sheet.getRange('A2').getValue() || 0;
 
     // 응답 반환
     var result = {
