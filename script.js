@@ -672,21 +672,17 @@ const STATS_API_URL = 'https://script.google.com/macros/s/AKfycbyy329R1fEkfOFjFr
 
 // PDF 다운로드 카운터 초기화 및 관리
 async function initPdfCounter() {
-    // 마지막 생성 시간은 localStorage에서 가져오기 (개인 기록)
-    const lastTime = localStorage.getItem('lastPdfTime');
-    updateLastPdfTimeDisplay(lastTime);
-
-    // 전체 카운트는 Apps Script에서 가져오기
+    // Apps Script에서 전체 통계 가져오기
     await fetchPdfStats();
 }
 
 // Apps Script에서 현재 통계 가져오기
 async function fetchPdfStats() {
-    // Apps Script URL이 설정되지 않은 경우 localStorage 사용
+    // Apps Script URL이 설정되지 않은 경우
     if (!STATS_API_URL || STATS_API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
-        console.log('Apps Script URL이 설정되지 않음. localStorage 사용');
-        const count = localStorage.getItem('pdfDownloadCount') || 0;
-        updatePdfCountDisplay(count);
+        console.log('Apps Script URL이 설정되지 않음');
+        updatePdfCountDisplay(0);
+        updateLastPdfTimeDisplay(null);
         return;
     }
 
@@ -700,18 +696,17 @@ async function fetchPdfStats() {
 
         if (data.success) {
             updatePdfCountDisplay(data.count);
+            updateLastPdfTimeDisplay(data.timestamp);
             console.log(`전체 PDF 생성 횟수: ${data.count}회`);
         } else {
             console.error('통계 조회 실패:', data.error);
-            // fallback to localStorage
-            const count = localStorage.getItem('pdfDownloadCount') || 0;
-            updatePdfCountDisplay(count);
+            updatePdfCountDisplay(0);
+            updateLastPdfTimeDisplay(null);
         }
     } catch (error) {
         console.error('통계 조회 에러:', error);
-        // fallback to localStorage
-        const count = localStorage.getItem('pdfDownloadCount') || 0;
-        updatePdfCountDisplay(count);
+        updatePdfCountDisplay(0);
+        updateLastPdfTimeDisplay(null);
     }
 }
 
@@ -745,19 +740,9 @@ function updateLastPdfTimeDisplay(timestamp) {
 }
 
 async function incrementPdfCounter() {
-    // 현재 시간 저장 (개인 기록용)
-    const now = Date.now();
-    localStorage.setItem('lastPdfTime', now);
-    updateLastPdfTimeDisplay(now);
-
-    // Apps Script URL이 설정되지 않은 경우 localStorage 사용
+    // Apps Script URL이 설정되지 않은 경우
     if (!STATS_API_URL || STATS_API_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
-        console.log('Apps Script URL이 설정되지 않음. localStorage 사용');
-        let count = parseInt(localStorage.getItem('pdfDownloadCount') || 0);
-        count++;
-        localStorage.setItem('pdfDownloadCount', count);
-        updatePdfCountDisplay(count);
-        console.log(`PDF 생성 횟수: ${count}회 (로컬), 시간: ${new Date(now).toLocaleString('ko-KR')}`);
+        console.log('Apps Script URL이 설정되지 않음');
         return;
     }
 
@@ -772,22 +757,13 @@ async function incrementPdfCounter() {
 
         if (data.success) {
             updatePdfCountDisplay(data.count);
-            console.log(`PDF 생성 횟수: ${data.count}회 (전체), 시간: ${new Date(now).toLocaleString('ko-KR')}`);
+            updateLastPdfTimeDisplay(data.timestamp);
+            console.log(`PDF 생성 횟수: ${data.count}회, 시간: ${new Date(data.timestamp).toLocaleString('ko-KR')}`);
         } else {
             console.error('카운터 증가 실패:', data.error);
-            // fallback to localStorage
-            let count = parseInt(localStorage.getItem('pdfDownloadCount') || 0);
-            count++;
-            localStorage.setItem('pdfDownloadCount', count);
-            updatePdfCountDisplay(count);
         }
     } catch (error) {
         console.error('카운터 증가 에러:', error);
-        // fallback to localStorage
-        let count = parseInt(localStorage.getItem('pdfDownloadCount') || 0);
-        count++;
-        localStorage.setItem('pdfDownloadCount', count);
-        updatePdfCountDisplay(count);
     }
 }
 
