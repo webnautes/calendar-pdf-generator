@@ -666,6 +666,37 @@ function getGoogleEvents(year, month, day) {
     return googleEvents[dateKey] || [];
 }
 
+// 방문자 카운터 초기화 (CountAPI 사용)
+async function initVisitorCounter() {
+    const visitorCountElement = document.getElementById('visitorCount');
+
+    try {
+        // CountAPI를 사용하여 방문자 수 증가 및 조회
+        // 프로젝트별 고유 키 사용
+        const namespace = 'calendar-pdf-generator';
+        const key = 'webnautes-visitor-count';
+
+        // 방문자 수 증가 및 현재 값 가져오기
+        const response = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+
+        if (!response.ok) {
+            throw new Error('방문자 수를 가져오는데 실패했습니다.');
+        }
+
+        const data = await response.json();
+
+        // 방문자 수 표시 (천 단위 구분 기호 추가)
+        if (data && data.value !== undefined) {
+            visitorCountElement.textContent = data.value.toLocaleString('ko-KR');
+        } else {
+            visitorCountElement.textContent = '오류';
+        }
+    } catch (error) {
+        console.error('방문자 카운터 오류:', error);
+        visitorCountElement.textContent = '오류';
+    }
+}
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initYearSelector();
@@ -675,6 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Google API 로드 (스크립트 로딩 대기)
     initGoogleAPIs();
+
+    // 방문자 카운터 초기화
+    initVisitorCounter();
 });
 
 // Google API 초기화 (스크립트 로딩 대기)
