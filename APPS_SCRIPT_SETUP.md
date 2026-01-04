@@ -67,7 +67,13 @@ function doGet(e) {
 
     // 현재 카운트 가져오기
     var count = sheet.getRange('A1').getValue() || 0;
-    var timestamp = sheet.getRange('A2').getValue() || 0;
+    var timestampValue = sheet.getRange('A2').getValue();
+
+    // timestamp를 숫자로 확실히 변환
+    var timestamp = 0;
+    if (timestampValue) {
+      timestamp = Number(timestampValue);
+    }
 
     // 응답 반환
     var result = {
