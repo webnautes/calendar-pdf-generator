@@ -754,22 +754,18 @@ async function incrementPdfCounter() {
         return;
     }
 
-    try {
-        // Apps Script로 카운터 증가 요청
-        await fetch(STATS_API_URL, {
-            method: 'POST'
-        });
-        // PDF 다운로드 완료 후 2초 뒤 페이지 새로고침
-        setTimeout(() => {
-            location.reload();
-        }, 2000);
-    } catch (error) {
+    // POST 요청 (keepalive로 페이지 새로고침 시에도 요청 완료 보장)
+    fetch(STATS_API_URL, {
+        method: 'POST',
+        keepalive: true  // 페이지 언로드 시에도 요청 유지
+    }).catch(error => {
         console.error('카운터 증가 에러:', error);
-        // 에러가 발생해도 2초 뒤 새로고침 (POST는 성공했을 수 있음)
-        setTimeout(() => {
-            location.reload();
-        }, 2000);
-    }
+    });
+
+    // 3초 후 페이지 새로고침 (POST 요청 완료 시간 확보)
+    setTimeout(() => {
+        location.reload();
+    }, 3000);
 }
 
 // 페이지 로드 시 초기화
