@@ -425,7 +425,8 @@ function getDdayText(year, month, day) {
     } else if (diffDays > 0) {
         return `D-${diffDays}`;
     } else {
-        return `D+${Math.abs(diffDays)}`;
+        // D-Day가 지난 날짜는 표시하지 않음
+        return null;
     }
 }
 
@@ -940,14 +941,20 @@ function renderCalendar() {
             ddayLabel.className = 'dday-label-cell';
             if (ddayText === 'D-Day') {
                 ddayLabel.classList.add('dday-today');
-            } else if (ddayText.startsWith('D+')) {
-                ddayLabel.classList.add('dday-past');
             }
             ddayLabel.textContent = ddayText;
             if (ddayName) {
                 ddayLabel.title = ddayName;
             }
             content.appendChild(ddayLabel);
+
+            // D-Day 당일에 기념일 이름 표시
+            if (ddayText === 'D-Day' && ddayName) {
+                const ddayNameLabel = document.createElement('div');
+                ddayNameLabel.className = 'dday-name-label';
+                ddayNameLabel.textContent = ddayName;
+                content.appendChild(ddayNameLabel);
+            }
         }
 
         // 공휴일 표시
@@ -1440,8 +1447,6 @@ function createMonthCalendarForPDF(year, month, perPage) {
             let ddayBgColor = '#667eea';
             if (ddayText === 'D-Day') {
                 ddayBgColor = '#e74c3c';
-            } else if (ddayText.startsWith('D+')) {
-                ddayBgColor = '#999';
             }
             ddayLabel.style.cssText = `
                 position: absolute;
@@ -1457,6 +1462,27 @@ function createMonthCalendarForPDF(year, month, perPage) {
             `;
             ddayLabel.textContent = ddayText;
             dayCell.appendChild(ddayLabel);
+
+            // D-Day 당일에 기념일 이름 표시
+            if (ddayText === 'D-Day' && ddayName) {
+                const ddayNameLabel = document.createElement('div');
+                ddayNameLabel.style.cssText = `
+                    position: absolute;
+                    top: ${config.gap / 2 + Math.max(config.daySize - 4, 8) + 4}px;
+                    right: ${config.gap / 2}px;
+                    font-size: ${Math.max(config.daySize - 6, 7)}px;
+                    font-weight: 500;
+                    color: #e74c3c;
+                    line-height: 1.1;
+                    max-width: ${config.cellWidth - config.gap}px;
+                    text-align: right;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                `;
+                ddayNameLabel.textContent = ddayName;
+                dayCell.appendChild(ddayNameLabel);
+            }
         }
 
         // 공휴일 이름 표시 (날짜 아래)
