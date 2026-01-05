@@ -1681,27 +1681,31 @@ function createMonthCalendarForPDF(year, month, perPage) {
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
 
-        // D-Day 표시 (오른쪽 위, 여러 개 지원)
+        // D-Day 표시 (오른쪽 위, 여러 개 지원) - 가독성 개선
         if (ddayInfos.length > 0) {
             let ddayTopOffset = config.gap / 2;
+            const ddayFontSize = Math.max(config.daySize - 2, 9);  // 폰트 크기 증가
+            const ddayNameFontSize = Math.max(config.daySize - 5, 7);
+
             ddayInfos.forEach((ddayInfo, index) => {
                 const ddayLabel = document.createElement('div');
                 ddayLabel.style.cssText = `
                     position: absolute;
                     top: ${ddayTopOffset}px;
                     right: ${config.gap / 2}px;
-                    font-size: ${Math.max(config.daySize - 4, 8)}px;
-                    font-weight: 600;
+                    font-size: ${ddayFontSize}px;
+                    font-weight: 700;
                     color: white;
                     background: ${ddayInfo.color};
-                    padding: 1px 4px;
-                    border-radius: 3px;
+                    padding: 2px 6px;
+                    border-radius: 4px;
                     line-height: 1.2;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
                 `;
                 ddayLabel.textContent = ddayInfo.text;
                 dayCell.appendChild(ddayLabel);
 
-                ddayTopOffset += Math.max(config.daySize - 4, 8) + 3;
+                ddayTopOffset += ddayFontSize + 6;
 
                 // 이벤트 이름 항상 표시 (D-Day 이전에도)
                 if (ddayInfo.name) {
@@ -1710,11 +1714,11 @@ function createMonthCalendarForPDF(year, month, perPage) {
                         position: absolute;
                         top: ${ddayTopOffset}px;
                         right: ${config.gap / 2}px;
-                        font-size: ${Math.max(config.daySize - 6, 7)}px;
-                        font-weight: 500;
+                        font-size: ${ddayNameFontSize}px;
+                        font-weight: 600;
                         color: ${ddayInfo.color};
                         line-height: 1.1;
-                        max-width: 70px;
+                        max-width: 50px;
                         text-align: right;
                         overflow: hidden;
                         text-overflow: ellipsis;
@@ -1723,7 +1727,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
                     ddayNameLabel.textContent = ddayInfo.name;
                     dayCell.appendChild(ddayNameLabel);
 
-                    ddayTopOffset += Math.max(config.daySize - 6, 7) + 2;
+                    ddayTopOffset += ddayNameFontSize + 4;
                 }
             });
         }
@@ -1753,13 +1757,18 @@ function createMonthCalendarForPDF(year, month, perPage) {
             const maxEvents = perPage === 1 ? 3 : (perPage === 2 ? 2 : 2);
             const displayEvents = events.slice(0, maxEvents);
 
+            // D-Day가 있을 때 이벤트 영역 너비 조정 (겹침 방지)
+            const eventRightMargin = ddayInfos.length > 0
+                ? Math.max(50, config.gap / 2 + 45)  // D-Day 영역 확보
+                : config.gap / 2;
+
             displayEvents.forEach((event, index) => {
                 const eventItem = document.createElement('div');
                 eventItem.style.cssText = `
                     position: absolute;
                     top: ${eventTop + index * (eventFontSize + 3)}px;
                     left: ${config.gap / 2}px;
-                    right: ${config.gap / 2}px;
+                    right: ${eventRightMargin}px;
                     font-size: ${eventFontSize}px;
                     color: white;
                     background: ${event.color || '#4285f4'};
