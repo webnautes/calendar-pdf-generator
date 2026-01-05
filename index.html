@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="google-site-verification" content="ia43lj5ml_kTkuxzkTjz1gTz593nkt3c0NszW1GfymY" />
     <title>달력 PDF 생성기</title>
-    <link rel="stylesheet" href="style.css?v=20260105170000">
+    <link rel="stylesheet" href="style.css?v=20260105180000">
 </head>
 <body>
     <div class="container">
@@ -54,20 +54,11 @@
             </div>
 
             <div class="pdf-options">
-                <label class="pdf-option-label">
-                    <span class="option-text">📄 PDF 한 장당 달력 개수:</span>
-                    <select id="monthsPerPage" class="pdf-selector">
-                        <option value="1">1개월 (12페이지)</option>
-                        <option value="2">2개월 (6페이지)</option>
-                        <option value="3" selected>3개월 (4페이지)</option>
-                    </select>
-                </label>
-                <div class="seasonal-food-option-wrapper" id="seasonalFoodOption" style="display: none;">
+                <div class="seasonal-food-option-wrapper" id="seasonalFoodOption">
                     <label class="checkbox-label seasonal-food-option">
                         <input type="checkbox" id="showSeasonalFood">
-                        <span class="checkbox-text">🍽️ 제철 음식 정보 포함</span>
+                        <span class="checkbox-text">🍽️ 제철 음식 정보 포함 (PDF)</span>
                     </label>
-                    <span class="seasonal-food-hint">💡 1개월 선택 시 PDF와 웹에 제철 음식 정보가 표시됩니다</span>
                 </div>
             </div>
 
@@ -224,6 +215,6 @@
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js?v=20260105170000"></script>
+    <script src="script.js?v=20260105180000"></script>
 </body>
 </html>

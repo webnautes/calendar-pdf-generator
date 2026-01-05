@@ -18,7 +18,7 @@ let currentYear = today.getFullYear();
 let currentMonth = today.getMonth() + 1; // JavaScript는 0부터 시작
 let showHolidays = false; // 공휴일 표시 여부
 let showGoogleEvents = false; // 구글 이벤트 표시 여부
-let monthsPerPage = 3; // PDF 한 장당 달력 개수
+let monthsPerPage = 1; // PDF 한 장당 달력 개수 (항상 1개월)
 let showSeasonalFood = false; // 제철 음식 표시 여부 (1개월 모드)
 
 // D-Day 설정 (최대 3개)
@@ -1170,8 +1170,8 @@ function renderCalendar() {
 
     calendar.appendChild(grid);
 
-    // 1개월 모드에서 제철 음식 옵션 체크 시에만 표시
-    if (monthsPerPage === 1 && showSeasonalFood && seasonalFoods[currentMonth]) {
+    // 제철 음식 옵션 체크 시 표시
+    if (showSeasonalFood && seasonalFoods[currentMonth]) {
         const foodSection = renderSeasonalFoods(currentMonth);
         calendar.appendChild(foodSection);
     }
@@ -1583,14 +1583,17 @@ async function generatePDF() {
 
 // PDF용 달력 생성 (세로 방향, 동적 크기)
 function createMonthCalendarForPDF(year, month, perPage) {
-    // 페이지당 개수에 따라 크기 조정
-    const sizeConfig = {
-        1: { width: 750, padding: 30, headerSize: 32, dayHeaderSize: 18, daySize: 14, gap: 10, cellPadding: 18, minHeight: 110 },
-        2: { width: 750, padding: 20, headerSize: 26, dayHeaderSize: 16, daySize: 13, gap: 8, cellPadding: 14, minHeight: 85 },
-        3: { width: 750, padding: 15, headerSize: 22, dayHeaderSize: 14, daySize: 12, gap: 6, cellPadding: 10, minHeight: 70 }
+    // 1개월 레이아웃 전용 설정 (세로로 긴 셀)
+    const config = {
+        width: 750,
+        padding: 30,
+        headerSize: 32,
+        dayHeaderSize: 18,
+        daySize: 14,
+        gap: 8,
+        cellPadding: 18,
+        minHeight: 130  // 세로로 더 긴 셀
     };
-
-    const config = sizeConfig[perPage] || sizeConfig[3];
 
     const container = document.createElement('div');
     container.style.cssText = `
@@ -1654,7 +1657,6 @@ function createMonthCalendarForPDF(year, month, perPage) {
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
         const events = getGoogleEvents(year, month, day);
-        const ddayInfos = getDdayInfo(year, month, day);
 
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
@@ -1681,57 +1683,6 @@ function createMonthCalendarForPDF(year, month, perPage) {
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
 
-        // D-Day 표시 (오른쪽 위, 여러 개 지원) - 가독성 개선
-        if (ddayInfos.length > 0) {
-            let ddayTopOffset = config.gap / 2;
-            const ddayFontSize = Math.max(config.daySize - 2, 9);  // 폰트 크기 증가
-            const ddayNameFontSize = Math.max(config.daySize - 5, 7);
-
-            ddayInfos.forEach((ddayInfo, index) => {
-                const ddayLabel = document.createElement('div');
-                ddayLabel.style.cssText = `
-                    position: absolute;
-                    top: ${ddayTopOffset}px;
-                    right: ${config.gap / 2}px;
-                    font-size: ${ddayFontSize}px;
-                    font-weight: 700;
-                    color: white;
-                    background: ${ddayInfo.color};
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    line-height: 1.2;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-                `;
-                ddayLabel.textContent = ddayInfo.text;
-                dayCell.appendChild(ddayLabel);
-
-                ddayTopOffset += ddayFontSize + 6;
-
-                // 이벤트 이름 항상 표시 (D-Day 이전에도)
-                if (ddayInfo.name) {
-                    const ddayNameLabel = document.createElement('div');
-                    ddayNameLabel.style.cssText = `
-                        position: absolute;
-                        top: ${ddayTopOffset}px;
-                        right: ${config.gap / 2}px;
-                        font-size: ${ddayNameFontSize}px;
-                        font-weight: 600;
-                        color: ${ddayInfo.color};
-                        line-height: 1.1;
-                        max-width: 50px;
-                        text-align: right;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                    `;
-                    ddayNameLabel.textContent = ddayInfo.name;
-                    dayCell.appendChild(ddayNameLabel);
-
-                    ddayTopOffset += ddayNameFontSize + 4;
-                }
-            });
-        }
-
         // 공휴일 이름 표시 (날짜 아래)
         if (holiday) {
             const holidayName = document.createElement('div');
@@ -1739,7 +1690,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
                 position: absolute;
                 top: ${config.gap / 2 + config.daySize + 2}px;
                 left: ${config.gap / 2}px;
-                font-size: ${config.daySize - 6}px;
+                font-size: ${config.daySize - 4}px;
                 color: #e74c3c;
                 line-height: 1.1;
                 font-weight: 500;
@@ -1748,36 +1699,31 @@ function createMonthCalendarForPDF(year, month, perPage) {
             dayCell.appendChild(holidayName);
         }
 
-        // 구글 이벤트 텍스트로 표시
+        // 구글 이벤트 텍스트로 표시 (왼쪽 정렬, 전체 너비 사용)
         if (events.length > 0) {
-            const eventFontSize = Math.max(config.daySize - 6, 7);
+            const eventFontSize = Math.max(config.daySize - 4, 9);
             const eventTop = holiday
-                ? config.gap / 2 + config.daySize + eventFontSize + 4
-                : config.gap / 2 + config.daySize + 4;
-            const maxEvents = perPage === 1 ? 3 : (perPage === 2 ? 2 : 2);
+                ? config.gap / 2 + config.daySize + eventFontSize + 6
+                : config.gap / 2 + config.daySize + 6;
+            const maxEvents = 4;  // 셀이 커져서 더 많이 표시 가능
             const displayEvents = events.slice(0, maxEvents);
-
-            // D-Day가 있을 때 이벤트 영역 너비 조정 (겹침 방지)
-            const eventRightMargin = ddayInfos.length > 0
-                ? Math.max(50, config.gap / 2 + 45)  // D-Day 영역 확보
-                : config.gap / 2;
 
             displayEvents.forEach((event, index) => {
                 const eventItem = document.createElement('div');
                 eventItem.style.cssText = `
                     position: absolute;
-                    top: ${eventTop + index * (eventFontSize + 3)}px;
+                    top: ${eventTop + index * (eventFontSize + 4)}px;
                     left: ${config.gap / 2}px;
-                    right: ${eventRightMargin}px;
+                    right: ${config.gap / 2}px;
                     font-size: ${eventFontSize}px;
                     color: white;
                     background: ${event.color || '#4285f4'};
-                    padding: 1px 3px;
-                    border-radius: 2px;
+                    padding: 2px 4px;
+                    border-radius: 3px;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    line-height: 1.2;
+                    line-height: 1.3;
                 `;
                 eventItem.textContent = event.title;
                 dayCell.appendChild(eventItem);
@@ -1788,7 +1734,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
                 const moreItem = document.createElement('div');
                 moreItem.style.cssText = `
                     position: absolute;
-                    top: ${eventTop + maxEvents * (eventFontSize + 3)}px;
+                    top: ${eventTop + maxEvents * (eventFontSize + 4)}px;
                     left: ${config.gap / 2}px;
                     font-size: ${eventFontSize - 1}px;
                     color: #666;
@@ -1803,8 +1749,112 @@ function createMonthCalendarForPDF(year, month, perPage) {
 
     container.appendChild(grid);
 
-    // 1장짜리 PDF일 때 제철 음식 추천 섹션 추가 (옵션 선택 시)
-    if (perPage === 1 && showSeasonalFood && seasonalFoods[month]) {
+    // D-Day 섹션 추가 (달력 아래)
+    const activeDdays = ddaySettings.filter(setting => setting.show && setting.date);
+    if (activeDdays.length > 0) {
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+
+        const ddaySection = document.createElement('div');
+        ddaySection.style.cssText = `
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+        `;
+
+        // D-Day 제목
+        const ddayTitle = document.createElement('div');
+        ddayTitle.style.cssText = `
+            font-size: 14px;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 12px;
+        `;
+        ddayTitle.textContent = 'D-Day';
+        ddaySection.appendChild(ddayTitle);
+
+        // D-Day 목록 (가로 배치)
+        const ddayList = document.createElement('div');
+        ddayList.style.cssText = `
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        `;
+
+        activeDdays.forEach(setting => {
+            const targetDate = new Date(setting.date);
+            targetDate.setHours(0, 0, 0, 0);
+
+            const diffTime = targetDate - todayDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            let badgeText;
+            if (diffDays === 0) {
+                badgeText = 'D-Day';
+            } else if (diffDays > 0) {
+                badgeText = `D-${diffDays}`;
+            } else {
+                badgeText = `D+${Math.abs(diffDays)}`;
+            }
+
+            const ddayItem = document.createElement('div');
+            ddayItem.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background: white;
+                padding: 10px 14px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            `;
+
+            const badge = document.createElement('div');
+            badge.style.cssText = `
+                font-size: 13px;
+                font-weight: 700;
+                color: white;
+                background: ${setting.color};
+                padding: 4px 10px;
+                border-radius: 6px;
+                min-width: 55px;
+                text-align: center;
+            `;
+            badge.textContent = badgeText;
+
+            const info = document.createElement('div');
+            info.style.cssText = `display: flex; flex-direction: column; gap: 2px;`;
+
+            const name = document.createElement('div');
+            name.style.cssText = `
+                font-size: 12px;
+                font-weight: 600;
+                color: ${setting.color};
+            `;
+            name.textContent = setting.name || '이벤트';
+
+            const dateText = document.createElement('div');
+            dateText.style.cssText = `
+                font-size: 10px;
+                color: #868e96;
+            `;
+            const dateObj = new Date(setting.date);
+            dateText.textContent = `${dateObj.getFullYear()}.${dateObj.getMonth() + 1}.${dateObj.getDate()}`;
+
+            info.appendChild(name);
+            info.appendChild(dateText);
+            ddayItem.appendChild(badge);
+            ddayItem.appendChild(info);
+            ddayList.appendChild(ddayItem);
+        });
+
+        ddaySection.appendChild(ddayList);
+        container.appendChild(ddaySection);
+    }
+
+    // 제철 음식 추천 섹션 추가 (옵션 선택 시)
+    if (showSeasonalFood && seasonalFoods[month]) {
         const foodData = seasonalFoods[month];
         const foodSection = document.createElement('div');
         foodSection.style.cssText = `
@@ -2018,20 +2068,6 @@ function attachEventListeners() {
     const signoutButton = document.getElementById('signoutButton');
     if (signoutButton) {
         signoutButton.addEventListener('click', handleSignoutClick);
-    }
-
-    // PDF 페이지당 개수 변경
-    const monthsPerPageSelect = document.getElementById('monthsPerPage');
-    const seasonalFoodOption = document.getElementById('seasonalFoodOption');
-    if (monthsPerPageSelect) {
-        monthsPerPageSelect.addEventListener('change', (e) => {
-            monthsPerPage = parseInt(e.target.value);
-            // 1개월 선택 시 제철 음식 옵션 표시
-            if (seasonalFoodOption) {
-                seasonalFoodOption.style.display = monthsPerPage === 1 ? 'block' : 'none';
-            }
-            renderCalendar(); // 제철 음식 표시를 위해 다시 렌더링
-        });
     }
 
     // 제철 음식 표시 체크박스
