@@ -25,6 +25,9 @@ let showDday = false; // D-Day 표시 여부
 let ddayDate = null; // D-Day 날짜
 let ddayName = ''; // D-Day 이름
 
+// PDF 달 선택
+let selectedMonths = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]); // 선택된 달 (기본: 전체)
+
 // 한국 고정 공휴일 (매년 동일한 날짜)
 const fixedHolidays = {
     '01-01': '신정',
@@ -428,6 +431,140 @@ function getDdayText(year, month, day) {
         // D-Day가 지난 날짜는 표시하지 않음
         return null;
     }
+}
+
+// PDF 달 선택 모달 관련 함수
+function openPdfModal() {
+    const modal = document.getElementById('pdfMonthModal');
+    modal.style.display = 'flex';
+    renderMonthGrid();
+    updateSelectedCount();
+}
+
+function closePdfModal() {
+    const modal = document.getElementById('pdfMonthModal');
+    modal.style.display = 'none';
+}
+
+function renderMonthGrid() {
+    const monthGrid = document.getElementById('monthGrid');
+    monthGrid.innerHTML = '';
+
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    for (let month = 1; month <= 12; month++) {
+        const monthItem = document.createElement('div');
+        monthItem.className = 'month-item' + (selectedMonths.has(month) ? ' selected' : '');
+        monthItem.dataset.month = month;
+
+        // 헤더 (체크박스 + 월 이름)
+        const header = document.createElement('div');
+        header.className = 'month-header';
+
+        const checkbox = document.createElement('div');
+        checkbox.className = 'month-checkbox';
+
+        const monthName = document.createElement('span');
+        monthName.className = 'month-name';
+        monthName.textContent = `${currentYear}년 ${month}월`;
+
+        header.appendChild(checkbox);
+        header.appendChild(monthName);
+
+        // 미리보기 달력
+        const preview = document.createElement('div');
+        preview.className = 'month-preview';
+
+        const grid = document.createElement('div');
+        grid.className = 'month-preview-grid';
+
+        // 요일 헤더
+        dayNames.forEach((day, idx) => {
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'month-preview-header';
+            if (idx === 0) dayHeader.classList.add('sunday');
+            if (idx === 6) dayHeader.classList.add('saturday');
+            dayHeader.textContent = day;
+            grid.appendChild(dayHeader);
+        });
+
+        // 날짜 계산
+        const firstDay = new Date(currentYear, month - 1, 1).getDay();
+        const daysInMonth = new Date(currentYear, month, 0).getDate();
+
+        // 빈 셀
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'month-preview-day empty';
+            empty.textContent = '';
+            grid.appendChild(empty);
+        }
+
+        // 날짜
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'month-preview-day';
+            const dayOfWeek = (firstDay + day - 1) % 7;
+            if (dayOfWeek === 0) dayCell.classList.add('sunday');
+            if (dayOfWeek === 6) dayCell.classList.add('saturday');
+            dayCell.textContent = day;
+            grid.appendChild(dayCell);
+        }
+
+        preview.appendChild(grid);
+        monthItem.appendChild(header);
+        monthItem.appendChild(preview);
+
+        // 클릭 이벤트
+        monthItem.addEventListener('click', () => {
+            toggleMonth(month);
+        });
+
+        monthGrid.appendChild(monthItem);
+    }
+}
+
+function toggleMonth(month) {
+    if (selectedMonths.has(month)) {
+        selectedMonths.delete(month);
+    } else {
+        selectedMonths.add(month);
+    }
+
+    // UI 업데이트
+    const monthItem = document.querySelector(`.month-item[data-month="${month}"]`);
+    if (monthItem) {
+        monthItem.classList.toggle('selected', selectedMonths.has(month));
+    }
+
+    updateSelectedCount();
+}
+
+function selectAllMonths() {
+    for (let i = 1; i <= 12; i++) {
+        selectedMonths.add(i);
+    }
+    document.querySelectorAll('.month-item').forEach(item => {
+        item.classList.add('selected');
+    });
+    updateSelectedCount();
+}
+
+function deselectAllMonths() {
+    selectedMonths.clear();
+    document.querySelectorAll('.month-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const count = selectedMonths.size;
+    const countText = document.getElementById('selectedMonthsCount');
+    const confirmBtn = document.getElementById('confirmPdfDownload');
+
+    countText.textContent = `${count}개월 선택됨`;
+    confirmBtn.disabled = count === 0;
 }
 
 // Google API 초기화
@@ -1218,6 +1355,13 @@ async function generatePDF() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
+    // 선택된 달을 정렬된 배열로 변환
+    const sortedMonths = Array.from(selectedMonths).sort((a, b) => a - b);
+    if (sortedMonths.length === 0) {
+        alert('출력할 달을 선택해주세요.');
+        return;
+    }
+
     // 임시 컨테이너 생성
     const tempContainer = document.createElement('div');
     tempContainer.style.cssText = `
@@ -1230,7 +1374,7 @@ async function generatePDF() {
     document.body.appendChild(tempContainer);
 
     try {
-        const totalPages = Math.ceil(12 / monthsPerPage);
+        const totalPages = Math.ceil(sortedMonths.length / monthsPerPage);
 
         // 페이지별 생성
         for (let page = 0; page < totalPages; page++) {
@@ -1243,8 +1387,10 @@ async function generatePDF() {
                 font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
             `;
 
-            const startMonth = page * monthsPerPage + 1;
-            const endMonth = Math.min(page * monthsPerPage + monthsPerPage, 12);
+            // 이 페이지에 표시될 달 계산
+            const pageMonths = sortedMonths.slice(page * monthsPerPage, (page + 1) * monthsPerPage);
+            const startMonth = pageMonths[0];
+            const endMonth = pageMonths[pageMonths.length - 1];
 
             // 제목 추가
             const title = document.createElement('div');
@@ -1255,7 +1401,7 @@ async function generatePDF() {
                 color: #333;
                 margin-bottom: 25px;
             `;
-            if (monthsPerPage === 1) {
+            if (pageMonths.length === 1) {
                 title.textContent = `${currentYear}년 ${startMonth}월`;
             } else {
                 title.textContent = `${currentYear}년 달력 (${startMonth}월 - ${endMonth}월)`;
@@ -1267,17 +1413,14 @@ async function generatePDF() {
             gridContainer.style.cssText = `
                 display: flex;
                 flex-direction: column;
-                gap: ${monthsPerPage === 1 ? '0px' : '25px'};
+                gap: ${pageMonths.length === 1 ? '0px' : '25px'};
                 background: white;
             `;
 
-            // 달력 생성
-            for (let i = 0; i < monthsPerPage; i++) {
-                const month = page * monthsPerPage + i + 1;
-                if (month <= 12) {
-                    const monthCalendar = createMonthCalendarForPDF(currentYear, month, monthsPerPage);
-                    gridContainer.appendChild(monthCalendar);
-                }
+            // 달력 생성 (선택된 달만)
+            for (const month of pageMonths) {
+                const monthCalendar = createMonthCalendarForPDF(currentYear, month, monthsPerPage);
+                gridContainer.appendChild(monthCalendar);
             }
 
             pageContainer.appendChild(gridContainer);
@@ -1700,8 +1843,36 @@ function attachEventListeners() {
         renderCalendar();
     });
 
-    // PDF 다운로드
-    document.getElementById('downloadPdf').addEventListener('click', async () => {
+    // PDF 다운로드 버튼 - 모달 열기
+    document.getElementById('downloadPdf').addEventListener('click', () => {
+        openPdfModal();
+    });
+
+    // 모달 닫기 버튼
+    document.getElementById('closeModal').addEventListener('click', () => {
+        closePdfModal();
+    });
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('pdfMonthModal').addEventListener('click', (e) => {
+        if (e.target.id === 'pdfMonthModal') {
+            closePdfModal();
+        }
+    });
+
+    // 전체 선택 버튼
+    document.getElementById('selectAllMonths').addEventListener('click', () => {
+        selectAllMonths();
+    });
+
+    // 전체 해제 버튼
+    document.getElementById('deselectAllMonths').addEventListener('click', () => {
+        deselectAllMonths();
+    });
+
+    // PDF 생성 확인 버튼
+    document.getElementById('confirmPdfDownload').addEventListener('click', async () => {
+        closePdfModal();
         try {
             await generatePDF();
         } catch (error) {

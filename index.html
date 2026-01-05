@@ -114,7 +114,30 @@
         </div>
 
         <div class="actions">
-            <button id="downloadPdf" class="btn-primary">📥 PDF 다운로드 (전체 년도)</button>
+            <button id="downloadPdf" class="btn-primary">📥 PDF 다운로드</button>
+        </div>
+    </div>
+
+    <!-- PDF 달 선택 모달 -->
+    <div id="pdfMonthModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📅 출력할 달 선택</h2>
+                <button id="closeModal" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="month-selection-controls">
+                    <button id="selectAllMonths" class="btn-select">전체 선택</button>
+                    <button id="deselectAllMonths" class="btn-select">전체 해제</button>
+                </div>
+                <div id="monthGrid" class="month-grid">
+                    <!-- JavaScript로 월별 미리보기가 생성됨 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span id="selectedMonthsCount" class="selected-count">0개월 선택됨</span>
+                <button id="confirmPdfDownload" class="btn-primary" disabled>PDF 생성</button>
+            </div>
         </div>
     </div>
 
