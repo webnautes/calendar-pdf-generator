@@ -1158,13 +1158,6 @@ function renderCalendar() {
         if (dayOfWeek === 0 || holiday) dayCell.classList.add('sunday');
         if (dayOfWeek === 6 && !holiday) dayCell.classList.add('saturday');
 
-        // 오늘 날짜 하이라이트
-        if (currentYear === today.getFullYear() &&
-            currentMonth === today.getMonth() + 1 &&
-            day === today.getDate()) {
-            dayCell.classList.add('today');
-        }
-
         grid.appendChild(dayCell);
     }
 
@@ -1657,6 +1650,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
         const events = getGoogleEvents(year, month, day);
+        const ddayInfos = getDdayInfo(year, month, day);
 
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
@@ -1682,6 +1676,32 @@ function createMonthCalendarForPDF(year, month, perPage) {
         `;
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
+
+        // D-Day 뱃지 표시 (오른쪽 위)
+        if (ddayInfos.length > 0) {
+            let ddayTopOffset = config.gap / 2;
+            const ddayFontSize = Math.max(config.daySize - 2, 10);
+
+            ddayInfos.forEach((ddayInfo) => {
+                const ddayLabel = document.createElement('div');
+                ddayLabel.style.cssText = `
+                    position: absolute;
+                    top: ${ddayTopOffset}px;
+                    right: ${config.gap / 2}px;
+                    font-size: ${ddayFontSize}px;
+                    font-weight: 700;
+                    color: white;
+                    background: ${ddayInfo.color};
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    line-height: 1.2;
+                `;
+                ddayLabel.textContent = ddayInfo.text;
+                dayCell.appendChild(ddayLabel);
+
+                ddayTopOffset += ddayFontSize + 6;
+            });
+        }
 
         // 공휴일 이름 표시 (날짜 아래)
         if (holiday) {
