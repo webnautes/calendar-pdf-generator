@@ -249,8 +249,17 @@ h1 {
     background: #e74c3c;
 }
 
-.dday-label-cell.dday-past {
-    background: #999;
+/* D-Day 당일 기념일 이름 */
+.dday-name-label {
+    font-size: 7px;
+    font-weight: 500;
+    color: #e74c3c;
+    margin-top: 1px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .google-auth-section {
