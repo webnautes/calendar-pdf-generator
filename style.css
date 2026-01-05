@@ -126,6 +126,22 @@ h1 {
     margin-top: 15px;
 }
 
+.seasonal-food-option-wrapper {
+    margin-top: 10px;
+    padding: 10px 15px;
+    background: #f0f7ff;
+    border-radius: 8px;
+    border: 1px solid #d0e3ff;
+}
+
+.seasonal-food-hint {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    padding-left: 24px;
+}
+
 .pdf-option-label {
     display: flex;
     align-items: center;

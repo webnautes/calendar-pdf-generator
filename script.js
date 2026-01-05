@@ -1170,8 +1170,8 @@ function renderCalendar() {
 
     calendar.appendChild(grid);
 
-    // 웹에서는 항상 제철 음식 표시
-    if (seasonalFoods[currentMonth]) {
+    // 1개월 모드에서 제철 음식 옵션 체크 시에만 표시
+    if (monthsPerPage === 1 && showSeasonalFood && seasonalFoods[currentMonth]) {
         const foodSection = renderSeasonalFoods(currentMonth);
         calendar.appendChild(foodSection);
     }
@@ -1183,12 +1183,6 @@ function renderSeasonalFoods(month) {
 
     const section = document.createElement('div');
     section.className = 'seasonal-foods-section';
-
-    // 안내 메시지
-    const notice = document.createElement('div');
-    notice.className = 'seasonal-foods-notice';
-    notice.innerHTML = '💡 PDF 옵션에서 <strong>1개월</strong> 선택 후 <strong>제철 음식 정보 포함</strong>을 체크하면 PDF에 포함됩니다!';
-    section.appendChild(notice);
 
     // 제목
     const title = document.createElement('div');
@@ -1942,7 +1936,7 @@ function attachEventListeners() {
             monthsPerPage = parseInt(e.target.value);
             // 1개월 선택 시 제철 음식 옵션 표시
             if (seasonalFoodOption) {
-                seasonalFoodOption.style.display = monthsPerPage === 1 ? 'flex' : 'none';
+                seasonalFoodOption.style.display = monthsPerPage === 1 ? 'block' : 'none';
             }
             renderCalendar(); // 제철 음식 표시를 위해 다시 렌더링
         });
@@ -1953,6 +1947,7 @@ function attachEventListeners() {
     if (seasonalFoodCheckbox) {
         seasonalFoodCheckbox.addEventListener('change', (e) => {
             showSeasonalFood = e.target.checked;
+            renderCalendar(); // 웹 화면에도 반영
         });
     }
 
