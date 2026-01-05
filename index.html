@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="google-site-verification" content="ia43lj5ml_kTkuxzkTjz1gTz593nkt3c0NszW1GfymY" />
     <title>달력 PDF 생성기</title>
-    <link rel="stylesheet" href="style.css?v=20260105130000">
+    <link rel="stylesheet" href="style.css?v=20260105140000">
 </head>
 <body>
     <div class="container">
@@ -66,50 +66,55 @@
 
             <div class="dday-section">
                 <div class="dday-header">
-                    <span class="dday-title">🎯 D-Day 설정 (최대 3개)</span>
+                    <span class="dday-title">🎯 D-Day 설정</span>
                 </div>
-                <div class="dday-item" data-dday-index="0">
-                    <input type="checkbox" id="showDday0" class="dday-checkbox">
-                    <label for="showDday0" class="dday-label">D-Day 1</label>
-                    <input type="date" id="ddayDate0" class="dday-date-input">
-                    <input type="text" id="ddayName0" class="dday-name-input" placeholder="이벤트 이름">
-                    <select id="ddayColor0" class="dday-color-select">
-                        <option value="#e74c3c">빨간색</option>
-                        <option value="#667eea" selected>파란색</option>
-                        <option value="#27ae60">초록색</option>
-                        <option value="#f39c12">주황색</option>
-                        <option value="#9b59b6">보라색</option>
-                        <option value="#1abc9c">청록색</option>
-                    </select>
+                <div id="ddayContainer">
+                    <div class="dday-item" data-dday-index="0">
+                        <input type="checkbox" id="showDday0" class="dday-checkbox">
+                        <label for="showDday0" class="dday-label">D-Day 1</label>
+                        <input type="date" id="ddayDate0" class="dday-date-input">
+                        <input type="text" id="ddayName0" class="dday-name-input" placeholder="이벤트 이름">
+                        <select id="ddayColor0" class="dday-color-select">
+                            <option value="#e74c3c">빨간색</option>
+                            <option value="#667eea" selected>파란색</option>
+                            <option value="#27ae60">초록색</option>
+                            <option value="#f39c12">주황색</option>
+                            <option value="#9b59b6">보라색</option>
+                            <option value="#1abc9c">청록색</option>
+                        </select>
+                    </div>
+                    <div class="dday-item" data-dday-index="1" style="display: none;">
+                        <input type="checkbox" id="showDday1" class="dday-checkbox">
+                        <label for="showDday1" class="dday-label">D-Day 2</label>
+                        <input type="date" id="ddayDate1" class="dday-date-input">
+                        <input type="text" id="ddayName1" class="dday-name-input" placeholder="이벤트 이름">
+                        <select id="ddayColor1" class="dday-color-select">
+                            <option value="#e74c3c">빨간색</option>
+                            <option value="#667eea" selected>파란색</option>
+                            <option value="#27ae60">초록색</option>
+                            <option value="#f39c12">주황색</option>
+                            <option value="#9b59b6">보라색</option>
+                            <option value="#1abc9c">청록색</option>
+                        </select>
+                        <button type="button" class="dday-remove-btn" data-remove-index="1">✕</button>
+                    </div>
+                    <div class="dday-item" data-dday-index="2" style="display: none;">
+                        <input type="checkbox" id="showDday2" class="dday-checkbox">
+                        <label for="showDday2" class="dday-label">D-Day 3</label>
+                        <input type="date" id="ddayDate2" class="dday-date-input">
+                        <input type="text" id="ddayName2" class="dday-name-input" placeholder="이벤트 이름">
+                        <select id="ddayColor2" class="dday-color-select">
+                            <option value="#e74c3c">빨간색</option>
+                            <option value="#667eea" selected>파란색</option>
+                            <option value="#27ae60">초록색</option>
+                            <option value="#f39c12">주황색</option>
+                            <option value="#9b59b6">보라색</option>
+                            <option value="#1abc9c">청록색</option>
+                        </select>
+                        <button type="button" class="dday-remove-btn" data-remove-index="2">✕</button>
+                    </div>
                 </div>
-                <div class="dday-item" data-dday-index="1">
-                    <input type="checkbox" id="showDday1" class="dday-checkbox">
-                    <label for="showDday1" class="dday-label">D-Day 2</label>
-                    <input type="date" id="ddayDate1" class="dday-date-input">
-                    <input type="text" id="ddayName1" class="dday-name-input" placeholder="이벤트 이름">
-                    <select id="ddayColor1" class="dday-color-select">
-                        <option value="#e74c3c">빨간색</option>
-                        <option value="#667eea" selected>파란색</option>
-                        <option value="#27ae60">초록색</option>
-                        <option value="#f39c12">주황색</option>
-                        <option value="#9b59b6">보라색</option>
-                        <option value="#1abc9c">청록색</option>
-                    </select>
-                </div>
-                <div class="dday-item" data-dday-index="2">
-                    <input type="checkbox" id="showDday2" class="dday-checkbox">
-                    <label for="showDday2" class="dday-label">D-Day 3</label>
-                    <input type="date" id="ddayDate2" class="dday-date-input">
-                    <input type="text" id="ddayName2" class="dday-name-input" placeholder="이벤트 이름">
-                    <select id="ddayColor2" class="dday-color-select">
-                        <option value="#e74c3c">빨간색</option>
-                        <option value="#667eea" selected>파란색</option>
-                        <option value="#27ae60">초록색</option>
-                        <option value="#f39c12">주황색</option>
-                        <option value="#9b59b6">보라색</option>
-                        <option value="#1abc9c">청록색</option>
-                    </select>
-                </div>
+                <button type="button" id="addDdayBtn" class="dday-add-btn">+ D-Day 추가</button>
             </div>
 
             <div class="google-auth-section">
@@ -207,6 +212,6 @@
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js?v=20260105130000"></script>
+    <script src="script.js?v=20260105140000"></script>
 </body>
 </html>
