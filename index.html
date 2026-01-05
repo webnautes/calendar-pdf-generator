@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="google-site-verification" content="ia43lj5ml_kTkuxzkTjz1gTz593nkt3c0NszW1GfymY" />
     <title>달력 PDF 생성기</title>
-    <link rel="stylesheet" href="style.css?v=20260104144000">
+    <link rel="stylesheet" href="style.css?v=20260105120000">
 </head>
 <body>
     <div class="container">
@@ -62,6 +62,18 @@
                         <option value="3" selected>3개월 (4페이지)</option>
                     </select>
                 </label>
+            </div>
+
+            <div class="dday-section">
+                <div class="dday-header">
+                    <span class="dday-title">🎯 D-Day 설정</span>
+                </div>
+                <div class="dday-item">
+                    <input type="checkbox" id="showDday" class="dday-checkbox">
+                    <label for="showDday" class="dday-label">D-Day 표시</label>
+                    <input type="date" id="ddayDate" class="dday-date-input">
+                    <input type="text" id="ddayName" class="dday-name-input" placeholder="D-Day 이름 (선택)">
+                </div>
             </div>
 
             <div class="google-auth-section">
@@ -136,6 +148,6 @@
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js?v=20260104144000"></script>
+    <script src="script.js?v=20260105120000"></script>
 </body>
 </html>

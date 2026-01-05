@@ -158,6 +158,101 @@ h1 {
     border-color: #667eea;
 }
 
+/* D-Day 섹션 스타일 */
+.dday-section {
+    margin-top: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.dday-header {
+    margin-bottom: 12px;
+}
+
+.dday-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.dday-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dday-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: #667eea;
+    cursor: pointer;
+}
+
+.dday-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    min-width: 80px;
+}
+
+.dday-date-input {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.dday-date-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.dday-name-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s;
+}
+
+.dday-name-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.dday-name-input::placeholder {
+    color: #aaa;
+}
+
+/* 달력 셀 내 D-Day 라벨 */
+.dday-label-cell {
+    font-size: 8px;
+    font-weight: 600;
+    color: white;
+    background: #667eea;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-top: 2px;
+    display: inline-block;
+}
+
+.dday-label-cell.dday-today {
+    background: #e74c3c;
+}
+
+.dday-label-cell.dday-past {
+    background: #999;
+}
+
 .google-auth-section {
     margin-top: 15px;
     text-align: center;
@@ -807,5 +902,20 @@ h1 {
 
     .seasonal-food-nutrition {
         align-self: flex-start;
+    }
+
+    /* D-Day 모바일 스타일 */
+    .dday-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dday-label {
+        margin-bottom: 5px;
+    }
+
+    .dday-date-input,
+    .dday-name-input {
+        width: 100%;
     }
 }
