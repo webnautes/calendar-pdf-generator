@@ -1654,62 +1654,79 @@ function createMonthCalendarForPDF(year, month, perPage) {
 
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
+        // 웹페이지와 동일한 flexbox 레이아웃
         dayCell.style.cssText = `
             padding: ${config.gap}px;
             background: #f8f9fa;
             border-radius: ${config.gap}px;
             min-height: ${config.minHeight}px;
-            position: relative;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
         `;
 
-        // 날짜 숫자 (왼쪽 위)
+        // 날짜 숫자
         const dayNum = document.createElement('div');
         dayNum.style.cssText = `
-            position: absolute;
-            top: ${config.gap / 2}px;
-            left: ${config.gap / 2}px;
             font-size: ${config.daySize}px;
             font-weight: 600;
             color: ${textColor};
-            line-height: 1;
+            line-height: 1.2;
         `;
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
 
-        // D-Day 뱃지 표시 (오른쪽 위)
+        // D-Day 표시 (웹과 동일하게 뱃지 + 이름)
         if (ddayInfos.length > 0) {
-            let ddayTopOffset = config.gap / 2;
-            const ddayFontSize = Math.max(config.daySize - 2, 10);
+            const ddayFontSize = Math.max(config.daySize - 4, 9);
+            const ddayNameFontSize = Math.max(config.daySize - 5, 8);
 
             ddayInfos.forEach((ddayInfo) => {
+                const ddayContainer = document.createElement('div');
+                ddayContainer.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-top: 1px;
+                `;
+
                 const ddayLabel = document.createElement('div');
                 ddayLabel.style.cssText = `
-                    position: absolute;
-                    top: ${ddayTopOffset}px;
-                    right: ${config.gap / 2}px;
                     font-size: ${ddayFontSize}px;
-                    font-weight: 700;
+                    font-weight: 600;
                     color: white;
                     background: ${ddayInfo.color};
-                    padding: 2px 6px;
-                    border-radius: 4px;
+                    padding: 1px 4px;
+                    border-radius: 3px;
                     line-height: 1.2;
                 `;
                 ddayLabel.textContent = ddayInfo.text;
-                dayCell.appendChild(ddayLabel);
+                ddayContainer.appendChild(ddayLabel);
 
-                ddayTopOffset += ddayFontSize + 6;
+                // 이벤트 이름 표시
+                if (ddayInfo.name) {
+                    const ddayNameLabel = document.createElement('div');
+                    ddayNameLabel.style.cssText = `
+                        font-size: ${ddayNameFontSize}px;
+                        font-weight: 500;
+                        color: ${ddayInfo.color};
+                        line-height: 1.1;
+                        margin-top: 1px;
+                    `;
+                    ddayNameLabel.textContent = ddayInfo.name;
+                    ddayContainer.appendChild(ddayNameLabel);
+                }
+
+                dayCell.appendChild(ddayContainer);
             });
         }
 
-        // 공휴일 이름 표시 (날짜 아래)
+        // 공휴일 이름 표시
         if (holiday) {
             const holidayName = document.createElement('div');
             holidayName.style.cssText = `
-                position: absolute;
-                top: ${config.gap / 2 + config.daySize + 2}px;
-                left: ${config.gap / 2}px;
                 font-size: ${config.daySize - 4}px;
                 color: #e74c3c;
                 line-height: 1.1;
@@ -1719,31 +1736,26 @@ function createMonthCalendarForPDF(year, month, perPage) {
             dayCell.appendChild(holidayName);
         }
 
-        // 구글 이벤트 텍스트로 표시 (왼쪽 정렬, 전체 너비 사용)
+        // 구글 이벤트 표시 (웹과 동일한 스타일)
         if (events.length > 0) {
-            const eventFontSize = Math.max(config.daySize - 4, 9);
-            const eventTop = holiday
-                ? config.gap / 2 + config.daySize + eventFontSize + 6
-                : config.gap / 2 + config.daySize + 6;
-            const maxEvents = 4;  // 셀이 커져서 더 많이 표시 가능
+            const eventFontSize = Math.max(config.daySize - 5, 8);
+            const maxEvents = 3;
             const displayEvents = events.slice(0, maxEvents);
 
-            displayEvents.forEach((event, index) => {
+            displayEvents.forEach((event) => {
                 const eventItem = document.createElement('div');
                 eventItem.style.cssText = `
-                    position: absolute;
-                    top: ${eventTop + index * (eventFontSize + 4)}px;
-                    left: ${config.gap / 2}px;
-                    right: ${config.gap / 2}px;
                     font-size: ${eventFontSize}px;
                     color: white;
                     background: ${event.color || '#4285f4'};
-                    padding: 2px 4px;
-                    border-radius: 3px;
+                    padding: 1px 4px;
+                    border-radius: 2px;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     line-height: 1.3;
+                    max-width: 100%;
+                    margin-top: 1px;
                 `;
                 eventItem.textContent = event.title;
                 dayCell.appendChild(eventItem);
@@ -1753,11 +1765,9 @@ function createMonthCalendarForPDF(year, month, perPage) {
             if (events.length > maxEvents) {
                 const moreItem = document.createElement('div');
                 moreItem.style.cssText = `
-                    position: absolute;
-                    top: ${eventTop + maxEvents * (eventFontSize + 4)}px;
-                    left: ${config.gap / 2}px;
                     font-size: ${eventFontSize - 1}px;
                     color: #666;
+                    margin-top: 1px;
                 `;
                 moreItem.textContent = `+${events.length - maxEvents}개`;
                 dayCell.appendChild(moreItem);
