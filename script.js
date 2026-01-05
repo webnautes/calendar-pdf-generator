@@ -19,6 +19,7 @@ let currentMonth = today.getMonth() + 1; // JavaScript는 0부터 시작
 let showHolidays = false; // 공휴일 표시 여부
 let showGoogleEvents = false; // 구글 이벤트 표시 여부
 let monthsPerPage = 3; // PDF 한 장당 달력 개수
+let showSeasonalFood = false; // 제철 음식 표시 여부 (1개월 모드)
 
 // D-Day 설정 (최대 3개)
 let ddaySettings = [
@@ -1186,7 +1187,7 @@ function renderSeasonalFoods(month) {
     // 안내 메시지
     const notice = document.createElement('div');
     notice.className = 'seasonal-foods-notice';
-    notice.innerHTML = '💡 PDF 옵션에서 <strong>1개월</strong> 선택 시, 제철 음식 정보가 PDF에도 포함됩니다!';
+    notice.innerHTML = '💡 PDF 옵션에서 <strong>1개월</strong> 선택 후 <strong>제철 음식 정보 포함</strong>을 체크하면 PDF에 포함됩니다!';
     section.appendChild(notice);
 
     // 제목
@@ -1716,8 +1717,8 @@ function createMonthCalendarForPDF(year, month, perPage) {
 
     container.appendChild(grid);
 
-    // 1장짜리 PDF일 때 제철 음식 추천 섹션 추가
-    if (perPage === 1 && seasonalFoods[month]) {
+    // 1장짜리 PDF일 때 제철 음식 추천 섹션 추가 (옵션 선택 시)
+    if (perPage === 1 && showSeasonalFood && seasonalFoods[month]) {
         const foodData = seasonalFoods[month];
         const foodSection = document.createElement('div');
         foodSection.style.cssText = `
@@ -1935,10 +1936,23 @@ function attachEventListeners() {
 
     // PDF 페이지당 개수 변경
     const monthsPerPageSelect = document.getElementById('monthsPerPage');
+    const seasonalFoodOption = document.getElementById('seasonalFoodOption');
     if (monthsPerPageSelect) {
         monthsPerPageSelect.addEventListener('change', (e) => {
             monthsPerPage = parseInt(e.target.value);
+            // 1개월 선택 시 제철 음식 옵션 표시
+            if (seasonalFoodOption) {
+                seasonalFoodOption.style.display = monthsPerPage === 1 ? 'flex' : 'none';
+            }
             renderCalendar(); // 제철 음식 표시를 위해 다시 렌더링
+        });
+    }
+
+    // 제철 음식 표시 체크박스
+    const seasonalFoodCheckbox = document.getElementById('showSeasonalFood');
+    if (seasonalFoodCheckbox) {
+        seasonalFoodCheckbox.addEventListener('change', (e) => {
+            showSeasonalFood = e.target.checked;
         });
     }
 
