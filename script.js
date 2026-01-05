@@ -20,10 +20,12 @@ let showHolidays = false; // 공휴일 표시 여부
 let showGoogleEvents = false; // 구글 이벤트 표시 여부
 let monthsPerPage = 3; // PDF 한 장당 달력 개수
 
-// D-Day 설정
-let showDday = false; // D-Day 표시 여부
-let ddayDate = null; // D-Day 날짜
-let ddayName = ''; // D-Day 이름
+// D-Day 설정 (최대 3개)
+let ddaySettings = [
+    { show: false, date: null, name: '', color: '#667eea' },
+    { show: false, date: null, name: '', color: '#667eea' },
+    { show: false, date: null, name: '', color: '#667eea' }
+];
 
 // PDF 달 선택
 let selectedMonths = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]); // 선택된 달 (기본: 전체)
@@ -409,28 +411,39 @@ function getHoliday(year, month, day) {
     return null;
 }
 
-// D-Day까지 남은 날짜 계산
-function getDdayText(year, month, day) {
-    if (!showDday || !ddayDate) return null;
-
+// D-Day까지 남은 날짜 계산 (여러 D-Day 지원)
+function getDdayInfo(year, month, day) {
+    const results = [];
     const currentDate = new Date(year, month - 1, day);
-    const targetDate = new Date(ddayDate);
-
-    // 시간 부분 제거 (날짜만 비교)
     currentDate.setHours(0, 0, 0, 0);
-    targetDate.setHours(0, 0, 0, 0);
 
-    const diffTime = targetDate - currentDate;
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    for (let i = 0; i < ddaySettings.length; i++) {
+        const setting = ddaySettings[i];
+        if (!setting.show || !setting.date) continue;
 
-    if (diffDays === 0) {
-        return 'D-Day';
-    } else if (diffDays > 0) {
-        return `D-${diffDays}`;
-    } else {
-        // D-Day가 지난 날짜는 표시하지 않음
-        return null;
+        const targetDate = new Date(setting.date);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate - currentDate;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 0) {
+            let text;
+            if (diffDays === 0) {
+                text = 'D-Day';
+            } else {
+                text = `D-${diffDays}`;
+            }
+            results.push({
+                text: text,
+                name: setting.name,
+                color: setting.color,
+                isDday: diffDays === 0
+            });
+        }
     }
+
+    return results;
 }
 
 // PDF 달 선택 모달 관련 함수
@@ -1061,7 +1074,7 @@ function renderCalendar() {
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(currentYear, currentMonth, day);
         const events = getGoogleEvents(currentYear, currentMonth, day);
-        const ddayText = getDdayText(currentYear, currentMonth, day);
+        const ddayInfos = getDdayInfo(currentYear, currentMonth, day);
 
         // 컨테이너 생성
         const content = document.createElement('div');
@@ -1072,26 +1085,32 @@ function renderCalendar() {
         dayNum.textContent = day;
         content.appendChild(dayNum);
 
-        // D-Day 표시
-        if (ddayText) {
-            const ddayLabel = document.createElement('div');
-            ddayLabel.className = 'dday-label-cell';
-            if (ddayText === 'D-Day') {
-                ddayLabel.classList.add('dday-today');
-            }
-            ddayLabel.textContent = ddayText;
-            if (ddayName) {
-                ddayLabel.title = ddayName;
-            }
-            content.appendChild(ddayLabel);
+        // D-Day 표시 (여러 개 지원)
+        if (ddayInfos.length > 0) {
+            ddayInfos.forEach(ddayInfo => {
+                const ddayContainer = document.createElement('div');
+                ddayContainer.className = 'dday-container';
 
-            // D-Day 당일에 기념일 이름 표시
-            if (ddayText === 'D-Day' && ddayName) {
-                const ddayNameLabel = document.createElement('div');
-                ddayNameLabel.className = 'dday-name-label';
-                ddayNameLabel.textContent = ddayName;
-                content.appendChild(ddayNameLabel);
-            }
+                const ddayLabel = document.createElement('div');
+                ddayLabel.className = 'dday-label-cell';
+                ddayLabel.style.background = ddayInfo.color;
+                ddayLabel.textContent = ddayInfo.text;
+                if (ddayInfo.name) {
+                    ddayLabel.title = ddayInfo.name;
+                }
+                ddayContainer.appendChild(ddayLabel);
+
+                // 이벤트 이름 항상 표시 (D-Day 이전에도)
+                if (ddayInfo.name) {
+                    const ddayNameLabel = document.createElement('div');
+                    ddayNameLabel.className = 'dday-name-label';
+                    ddayNameLabel.style.color = ddayInfo.color;
+                    ddayNameLabel.textContent = ddayInfo.name;
+                    ddayContainer.appendChild(ddayNameLabel);
+                }
+
+                content.appendChild(ddayContainer);
+            });
         }
 
         // 공휴일 표시
@@ -1557,7 +1576,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
         const events = getGoogleEvents(year, month, day);
-        const ddayText = getDdayText(year, month, day);
+        const ddayInfos = getDdayInfo(year, month, day);
 
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
@@ -1584,48 +1603,51 @@ function createMonthCalendarForPDF(year, month, perPage) {
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
 
-        // D-Day 표시 (오른쪽 위)
-        if (ddayText) {
-            const ddayLabel = document.createElement('div');
-            let ddayBgColor = '#667eea';
-            if (ddayText === 'D-Day') {
-                ddayBgColor = '#e74c3c';
-            }
-            ddayLabel.style.cssText = `
-                position: absolute;
-                top: ${config.gap / 2}px;
-                right: ${config.gap / 2}px;
-                font-size: ${Math.max(config.daySize - 4, 8)}px;
-                font-weight: 600;
-                color: white;
-                background: ${ddayBgColor};
-                padding: 1px 4px;
-                border-radius: 3px;
-                line-height: 1.2;
-            `;
-            ddayLabel.textContent = ddayText;
-            dayCell.appendChild(ddayLabel);
-
-            // D-Day 당일에 기념일 이름 표시
-            if (ddayText === 'D-Day' && ddayName) {
-                const ddayNameLabel = document.createElement('div');
-                ddayNameLabel.style.cssText = `
+        // D-Day 표시 (오른쪽 위, 여러 개 지원)
+        if (ddayInfos.length > 0) {
+            let ddayTopOffset = config.gap / 2;
+            ddayInfos.forEach((ddayInfo, index) => {
+                const ddayLabel = document.createElement('div');
+                ddayLabel.style.cssText = `
                     position: absolute;
-                    top: ${config.gap / 2 + Math.max(config.daySize - 4, 8) + 4}px;
+                    top: ${ddayTopOffset}px;
                     right: ${config.gap / 2}px;
-                    font-size: ${Math.max(config.daySize - 6, 7)}px;
-                    font-weight: 500;
-                    color: #e74c3c;
-                    line-height: 1.1;
-                    max-width: ${config.cellWidth - config.gap}px;
-                    text-align: right;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
+                    font-size: ${Math.max(config.daySize - 4, 8)}px;
+                    font-weight: 600;
+                    color: white;
+                    background: ${ddayInfo.color};
+                    padding: 1px 4px;
+                    border-radius: 3px;
+                    line-height: 1.2;
                 `;
-                ddayNameLabel.textContent = ddayName;
-                dayCell.appendChild(ddayNameLabel);
-            }
+                ddayLabel.textContent = ddayInfo.text;
+                dayCell.appendChild(ddayLabel);
+
+                ddayTopOffset += Math.max(config.daySize - 4, 8) + 3;
+
+                // 이벤트 이름 항상 표시 (D-Day 이전에도)
+                if (ddayInfo.name) {
+                    const ddayNameLabel = document.createElement('div');
+                    ddayNameLabel.style.cssText = `
+                        position: absolute;
+                        top: ${ddayTopOffset}px;
+                        right: ${config.gap / 2}px;
+                        font-size: ${Math.max(config.daySize - 6, 7)}px;
+                        font-weight: 500;
+                        color: ${ddayInfo.color};
+                        line-height: 1.1;
+                        max-width: 70px;
+                        text-align: right;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    `;
+                    ddayNameLabel.textContent = ddayInfo.name;
+                    dayCell.appendChild(ddayNameLabel);
+
+                    ddayTopOffset += Math.max(config.daySize - 6, 7) + 2;
+                }
+            });
         }
 
         // 공휴일 이름 표시 (날짜 아래)
@@ -1920,35 +1942,49 @@ function attachEventListeners() {
         });
     }
 
-    // D-Day 체크박스
-    const ddayCheckbox = document.getElementById('showDday');
-    if (ddayCheckbox) {
-        ddayCheckbox.addEventListener('change', (e) => {
-            showDday = e.target.checked;
-            renderCalendar();
-        });
-    }
-
-    // D-Day 날짜 선택
-    const ddayDateInput = document.getElementById('ddayDate');
-    if (ddayDateInput) {
-        ddayDateInput.addEventListener('change', (e) => {
-            ddayDate = e.target.value;
-            if (ddayDate && showDday) {
+    // D-Day 이벤트 리스너 (3개 지원)
+    for (let i = 0; i < 3; i++) {
+        // D-Day 체크박스
+        const ddayCheckbox = document.getElementById(`showDday${i}`);
+        if (ddayCheckbox) {
+            ddayCheckbox.addEventListener('change', ((index) => (e) => {
+                ddaySettings[index].show = e.target.checked;
                 renderCalendar();
-            }
-        });
-    }
+            })(i));
+        }
 
-    // D-Day 이름 입력
-    const ddayNameInput = document.getElementById('ddayName');
-    if (ddayNameInput) {
-        ddayNameInput.addEventListener('input', (e) => {
-            ddayName = e.target.value;
-            if (showDday) {
-                renderCalendar();
-            }
-        });
+        // D-Day 날짜 선택
+        const ddayDateInput = document.getElementById(`ddayDate${i}`);
+        if (ddayDateInput) {
+            ddayDateInput.addEventListener('change', ((index) => (e) => {
+                ddaySettings[index].date = e.target.value;
+                if (ddaySettings[index].date && ddaySettings[index].show) {
+                    renderCalendar();
+                }
+            })(i));
+        }
+
+        // D-Day 이름 입력
+        const ddayNameInput = document.getElementById(`ddayName${i}`);
+        if (ddayNameInput) {
+            ddayNameInput.addEventListener('input', ((index) => (e) => {
+                ddaySettings[index].name = e.target.value;
+                if (ddaySettings[index].show) {
+                    renderCalendar();
+                }
+            })(i));
+        }
+
+        // D-Day 색상 선택
+        const ddayColorSelect = document.getElementById(`ddayColor${i}`);
+        if (ddayColorSelect) {
+            ddayColorSelect.addEventListener('change', ((index) => (e) => {
+                ddaySettings[index].color = e.target.value;
+                if (ddaySettings[index].show) {
+                    renderCalendar();
+                }
+            })(i));
+        }
     }
 
     // 캘린더 목록 토글 버튼

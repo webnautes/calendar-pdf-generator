@@ -176,13 +176,6 @@ h1 {
     color: #333;
 }
 
-.dday-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
 .dday-checkbox {
     width: 20px;
     height: 20px;
@@ -231,6 +224,48 @@ h1 {
 
 .dday-name-input::placeholder {
     color: #aaa;
+}
+
+/* D-Day 색상 선택 */
+.dday-color-select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 90px;
+}
+
+.dday-color-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* D-Day 아이템 간격 */
+.dday-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.dday-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* D-Day 컨테이너 (캘린더 셀 내) */
+.dday-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 2px;
 }
 
 /* 달력 셀 내 D-Day 라벨 */
@@ -924,7 +959,8 @@ h1 {
     }
 
     .dday-date-input,
-    .dday-name-input {
+    .dday-name-input,
+    .dday-color-select {
         width: 100%;
     }
 }
