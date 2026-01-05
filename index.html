@@ -62,10 +62,13 @@
                         <option value="3" selected>3개월 (4페이지)</option>
                     </select>
                 </label>
-                <label class="checkbox-label seasonal-food-option" id="seasonalFoodOption" style="display: none;">
-                    <input type="checkbox" id="showSeasonalFood">
-                    <span class="checkbox-text">🍽️ 제철 음식 정보 포함</span>
-                </label>
+                <div class="seasonal-food-option-wrapper" id="seasonalFoodOption" style="display: none;">
+                    <label class="checkbox-label seasonal-food-option">
+                        <input type="checkbox" id="showSeasonalFood">
+                        <span class="checkbox-text">🍽️ 제철 음식 정보 포함</span>
+                    </label>
+                    <span class="seasonal-food-hint">💡 1개월 선택 시 PDF와 웹에 제철 음식 정보가 표시됩니다</span>
+                </div>
             </div>
 
             <div class="dday-section">
