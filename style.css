@@ -260,6 +260,48 @@ h1 {
     border-bottom: none;
 }
 
+/* D-Day 추가 버튼 */
+.dday-add-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #667eea;
+    background: white;
+    border: 2px dashed #667eea;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.dday-add-btn:hover {
+    background: #667eea;
+    color: white;
+    border-style: solid;
+}
+
+/* D-Day 제거 버튼 */
+.dday-remove-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #dc3545;
+    background: white;
+    border: 2px solid #dc3545;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.dday-remove-btn:hover {
+    background: #dc3545;
+    color: white;
+}
+
 /* D-Day 컨테이너 (캘린더 셀 내) */
 .dday-container {
     display: flex;

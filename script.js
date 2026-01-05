@@ -1987,6 +1987,68 @@ function attachEventListeners() {
         }
     }
 
+    // D-Day 추가 버튼
+    const addDdayBtn = document.getElementById('addDdayBtn');
+    if (addDdayBtn) {
+        addDdayBtn.addEventListener('click', () => {
+            const ddayItems = document.querySelectorAll('.dday-item');
+            let addedCount = 0;
+            for (let i = 0; i < ddayItems.length; i++) {
+                if (ddayItems[i].style.display !== 'none') {
+                    addedCount++;
+                }
+            }
+            // 다음 숨겨진 D-Day 아이템 표시
+            if (addedCount < 3) {
+                const nextItem = document.querySelector(`.dday-item[data-dday-index="${addedCount}"]`);
+                if (nextItem) {
+                    nextItem.style.display = 'flex';
+                }
+            }
+            // 최대 3개면 버튼 숨김
+            if (addedCount + 1 >= 3) {
+                addDdayBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // D-Day 제거 버튼들
+    const ddayRemoveBtns = document.querySelectorAll('.dday-remove-btn');
+    ddayRemoveBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.removeIndex);
+            const ddayItem = document.querySelector(`.dday-item[data-dday-index="${index}"]`);
+            if (ddayItem) {
+                // 상태 초기화
+                ddaySettings[index].show = false;
+                ddaySettings[index].date = null;
+                ddaySettings[index].name = '';
+                ddaySettings[index].color = '#667eea';
+
+                // UI 초기화
+                const checkbox = document.getElementById(`showDday${index}`);
+                const dateInput = document.getElementById(`ddayDate${index}`);
+                const nameInput = document.getElementById(`ddayName${index}`);
+                const colorSelect = document.getElementById(`ddayColor${index}`);
+
+                if (checkbox) checkbox.checked = false;
+                if (dateInput) dateInput.value = '';
+                if (nameInput) nameInput.value = '';
+                if (colorSelect) colorSelect.value = '#667eea';
+
+                // 아이템 숨김
+                ddayItem.style.display = 'none';
+
+                // 추가 버튼 다시 표시
+                if (addDdayBtn) {
+                    addDdayBtn.style.display = 'block';
+                }
+
+                renderCalendar();
+            }
+        });
+    });
+
     // 캘린더 목록 토글 버튼
     const toggleCalendarListBtn = document.getElementById('toggleCalendarList');
     const calendarListContainer = document.getElementById('calendarList');
