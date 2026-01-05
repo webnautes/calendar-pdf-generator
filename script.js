@@ -1075,6 +1075,7 @@ function renderCalendar() {
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(currentYear, currentMonth, day);
         const events = getGoogleEvents(currentYear, currentMonth, day);
+        const ddayInfos = getDdayInfo(currentYear, currentMonth, day);
 
         // 컨테이너 생성
         const content = document.createElement('div');
@@ -1084,6 +1085,34 @@ function renderCalendar() {
         dayNum.className = 'day-number';
         dayNum.textContent = day;
         content.appendChild(dayNum);
+
+        // D-Day 표시 (여러 개 지원)
+        if (ddayInfos.length > 0) {
+            ddayInfos.forEach(ddayInfo => {
+                const ddayContainer = document.createElement('div');
+                ddayContainer.className = 'dday-container';
+
+                const ddayLabel = document.createElement('div');
+                ddayLabel.className = 'dday-label-cell';
+                ddayLabel.style.background = ddayInfo.color;
+                ddayLabel.textContent = ddayInfo.text;
+                if (ddayInfo.name) {
+                    ddayLabel.title = ddayInfo.name;
+                }
+                ddayContainer.appendChild(ddayLabel);
+
+                // 이벤트 이름 표시
+                if (ddayInfo.name) {
+                    const ddayNameLabel = document.createElement('div');
+                    ddayNameLabel.className = 'dday-name-label';
+                    ddayNameLabel.style.color = ddayInfo.color;
+                    ddayNameLabel.textContent = ddayInfo.name;
+                    ddayContainer.appendChild(ddayNameLabel);
+                }
+
+                content.appendChild(ddayContainer);
+            });
+        }
 
         // 공휴일 표시
         if (holiday) {
@@ -1618,6 +1647,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
         const events = getGoogleEvents(year, month, day);
+        const ddayInfos = getDdayInfo(year, month, day);
 
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
@@ -1644,6 +1674,51 @@ function createMonthCalendarForPDF(year, month, perPage) {
         `;
         dayNum.textContent = day;
         dayCell.appendChild(dayNum);
+
+        // D-Day 표시 (웹과 동일하게 뱃지 + 이름)
+        if (ddayInfos.length > 0) {
+            const ddayFontSize = Math.max(config.daySize - 4, 9);
+            const ddayNameFontSize = Math.max(config.daySize - 5, 8);
+
+            ddayInfos.forEach((ddayInfo) => {
+                const ddayContainer = document.createElement('div');
+                ddayContainer.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-top: 1px;
+                `;
+
+                const ddayLabel = document.createElement('div');
+                ddayLabel.style.cssText = `
+                    font-size: ${ddayFontSize}px;
+                    font-weight: 600;
+                    color: white;
+                    background: ${ddayInfo.color};
+                    padding: 1px 4px;
+                    border-radius: 3px;
+                    line-height: 1.2;
+                `;
+                ddayLabel.textContent = ddayInfo.text;
+                ddayContainer.appendChild(ddayLabel);
+
+                // 이벤트 이름 표시
+                if (ddayInfo.name) {
+                    const ddayNameLabel = document.createElement('div');
+                    ddayNameLabel.style.cssText = `
+                        font-size: ${ddayNameFontSize}px;
+                        font-weight: 500;
+                        color: ${ddayInfo.color};
+                        line-height: 1.1;
+                        margin-top: 1px;
+                    `;
+                    ddayNameLabel.textContent = ddayInfo.name;
+                    ddayContainer.appendChild(ddayNameLabel);
+                }
+
+                dayCell.appendChild(ddayContainer);
+            });
+        }
 
         // 공휴일 이름 표시
         if (holiday) {
