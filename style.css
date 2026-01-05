@@ -360,6 +360,103 @@ h1 {
     max-width: 100%;
 }
 
+/* D-Day 목록 섹션 (캘린더 아래) */
+.dday-list-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid #dee2e6;
+}
+
+.dday-list-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+}
+
+.dday-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dday-list-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s;
+}
+
+.dday-list-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.dday-list-badge {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    min-width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dday-list-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dday-list-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.dday-list-date {
+    font-size: 13px;
+    color: #888;
+}
+
+/* D-Day 목록 모바일 스타일 */
+@media (max-width: 480px) {
+    .dday-list-section {
+        padding: 15px;
+    }
+
+    .dday-list-title {
+        font-size: 16px;
+    }
+
+    .dday-list-item {
+        padding: 12px 15px;
+        gap: 12px;
+    }
+
+    .dday-list-badge {
+        font-size: 14px;
+        padding: 6px 12px;
+        min-width: 70px;
+    }
+
+    .dday-list-name {
+        font-size: 14px;
+    }
+
+    .dday-list-date {
+        font-size: 12px;
+    }
+}
+
 .google-auth-section {
     margin-top: 15px;
     text-align: center;
