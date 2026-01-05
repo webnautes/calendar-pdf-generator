@@ -1175,6 +1175,89 @@ function renderCalendar() {
         const foodSection = renderSeasonalFoods(currentMonth);
         calendar.appendChild(foodSection);
     }
+
+    // D-Day 목록 섹션 렌더링
+    renderDdayList();
+}
+
+// D-Day 목록 섹션 렌더링 (캘린더 아래)
+function renderDdayList() {
+    const ddayListSection = document.getElementById('ddayListSection');
+    if (!ddayListSection) return;
+
+    // 활성화된 D-Day 설정 필터링
+    const activeDdays = ddaySettings.filter(setting => setting.show && setting.date);
+
+    if (activeDdays.length === 0) {
+        ddayListSection.style.display = 'none';
+        return;
+    }
+
+    ddayListSection.style.display = 'block';
+    ddayListSection.innerHTML = '';
+
+    // 제목
+    const title = document.createElement('div');
+    title.className = 'dday-list-title';
+    title.textContent = '🎯 D-Day 카운터';
+    ddayListSection.appendChild(title);
+
+    // D-Day 목록 컨테이너
+    const listContainer = document.createElement('div');
+    listContainer.className = 'dday-list-container';
+
+    // 오늘 날짜 기준으로 계산
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    activeDdays.forEach(setting => {
+        const targetDate = new Date(setting.date);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate - todayDate;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        const ddayItem = document.createElement('div');
+        ddayItem.className = 'dday-list-item';
+
+        // D-Day 뱃지
+        const ddayBadge = document.createElement('div');
+        ddayBadge.className = 'dday-list-badge';
+        ddayBadge.style.backgroundColor = setting.color;
+
+        let badgeText;
+        if (diffDays === 0) {
+            badgeText = 'D-Day';
+        } else if (diffDays > 0) {
+            badgeText = `D-${diffDays}`;
+        } else {
+            badgeText = `D+${Math.abs(diffDays)}`;
+        }
+        ddayBadge.textContent = badgeText;
+
+        // 이벤트 정보
+        const ddayInfo = document.createElement('div');
+        ddayInfo.className = 'dday-list-info';
+
+        const ddayName = document.createElement('div');
+        ddayName.className = 'dday-list-name';
+        ddayName.textContent = setting.name || '이벤트';
+        ddayName.style.color = setting.color;
+
+        const ddayDate = document.createElement('div');
+        ddayDate.className = 'dday-list-date';
+        const dateObj = new Date(setting.date);
+        ddayDate.textContent = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
+
+        ddayInfo.appendChild(ddayName);
+        ddayInfo.appendChild(ddayDate);
+
+        ddayItem.appendChild(ddayBadge);
+        ddayItem.appendChild(ddayInfo);
+        listContainer.appendChild(ddayItem);
+    });
+
+    ddayListSection.appendChild(listContainer);
 }
 
 // 제철 음식 섹션 렌더링 (웹용)
