@@ -8,6 +8,14 @@ let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 let accessToken = null;
+let oauthState = null; // OAuth CSRF 방지용 state 파라미터
+
+// OAuth state 생성 함수 (CSRF 공격 방지)
+function generateOAuthState() {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
 let googleEvents = {}; // 구글 캘린더 이벤트 저장
 let calendarList = []; // 사용 가능한 캘린더 목록
 let selectedCalendars = new Set(); // 선택된 캘린더 ID 목록
@@ -616,10 +624,21 @@ function maybeEnableButtons() {
 
 // 로그인 처리
 function handleAuthClick() {
+    // 새로운 state 생성
+    oauthState = generateOAuthState();
+
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) {
             throw (resp);
         }
+
+        // State 파라미터 검증 (CSRF 공격 방지)
+        if (resp.state && resp.state !== oauthState) {
+            console.error('OAuth state mismatch - possible CSRF attack');
+            alert('보안 검증에 실패했습니다. 다시 시도해 주세요.');
+            return;
+        }
+
         accessToken = gapi.client.getToken();
         document.getElementById('signoutButton').style.display = 'inline-block';
         document.getElementById('authorizeButton').style.display = 'none';
@@ -640,9 +659,9 @@ function handleAuthClick() {
     };
 
     if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({prompt: 'consent'});
+        tokenClient.requestAccessToken({prompt: 'consent', state: oauthState});
     } else {
-        tokenClient.requestAccessToken({prompt: ''});
+        tokenClient.requestAccessToken({prompt: '', state: oauthState});
     }
 }
 
