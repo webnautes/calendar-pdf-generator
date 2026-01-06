@@ -1730,6 +1730,9 @@ function createMonthCalendarForPDF(year, month, perPage) {
                         color: ${ddayInfo.color};
                         line-height: 1.1;
                         margin-top: 1px;
+                        word-break: break-word;
+                        overflow-wrap: break-word;
+                        max-width: 100%;
                     `;
                     ddayNameLabel.textContent = ddayInfo.name;
                     ddayContainer.appendChild(ddayNameLabel);
@@ -1747,6 +1750,9 @@ function createMonthCalendarForPDF(year, month, perPage) {
                 color: #e74c3c;
                 line-height: 1.1;
                 font-weight: 500;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
             `;
             holidayName.textContent = holiday;
             dayCell.appendChild(holidayName);
@@ -1766,9 +1772,8 @@ function createMonthCalendarForPDF(year, month, perPage) {
                     background: ${event.color || '#4285f4'};
                     padding: 1px 4px;
                     border-radius: 2px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
                     line-height: 1.3;
                     max-width: 100%;
                     margin-top: 1px;

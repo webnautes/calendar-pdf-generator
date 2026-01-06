@@ -354,9 +354,8 @@ h1 {
     color: #e74c3c;
     margin-top: 1px;
     line-height: 1.1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
     max-width: 100%;
 }
 
@@ -762,6 +761,8 @@ h1 {
     margin-top: 2px;
     text-align: center;
     line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .day-cell-content {
@@ -790,15 +791,14 @@ h1 {
 
 .event-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 3px;
     font-size: 9px;
     line-height: 1.2;
     padding: 1px 3px;
     border-radius: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
+    overflow-wrap: break-word;
     color: white;
     font-weight: 500;
 }
