@@ -1610,6 +1610,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
         padding: ${config.padding}px;
         width: ${config.width}px;
         box-sizing: border-box;
+        border: 1px solid #ddd;
     `;
 
     // 월 헤더 (1개일 때는 숨김 - 제목에 표시됨)
@@ -1619,7 +1620,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
             text-align: center;
             font-size: ${config.headerSize}px;
             font-weight: bold;
-            color: #667eea;
+            color: #333;
             margin-bottom: ${config.padding / 2}px;
         `;
         header.textContent = `${month}월`;
@@ -1631,7 +1632,8 @@ function createMonthCalendarForPDF(year, month, perPage) {
     grid.style.cssText = `
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: ${config.gap}px;
+        border-top: 1px solid #ddd;
+        border-left: 1px solid #ddd;
     `;
 
     // 요일 헤더
@@ -1644,6 +1646,9 @@ function createMonthCalendarForPDF(year, month, perPage) {
             font-weight: bold;
             font-size: ${config.dayHeaderSize}px;
             color: ${index === 0 ? '#e74c3c' : index === 6 ? '#3498db' : '#666'};
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
         `;
         dayHeader.textContent = day;
         grid.appendChild(dayHeader);
@@ -1656,7 +1661,12 @@ function createMonthCalendarForPDF(year, month, perPage) {
     // 빈 셀
     for (let i = 0; i < firstDay; i++) {
         const emptyCell = document.createElement('div');
-        emptyCell.style.cssText = `padding: ${config.cellPadding}px;`;
+        emptyCell.style.cssText = `
+            padding: ${config.cellPadding}px;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            background: white;
+        `;
         grid.appendChild(emptyCell);
     }
 
@@ -1673,14 +1683,15 @@ function createMonthCalendarForPDF(year, month, perPage) {
         // 웹페이지와 동일한 flexbox 레이아웃
         dayCell.style.cssText = `
             padding: ${config.gap}px;
-            background: #f8f9fa;
-            border-radius: ${config.gap}px;
+            background: white;
             min-height: ${config.minHeight}px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
             gap: 2px;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
         `;
 
         // 날짜 숫자
@@ -1807,8 +1818,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
         foodSection.style.cssText = `
             margin-top: 20px;
             padding: 15px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-            border-radius: 10px;
+            background: white;
             border: 1px solid #ddd;
         `;
 
@@ -1817,7 +1827,7 @@ function createMonthCalendarForPDF(year, month, perPage) {
         foodTitle.style.cssText = `
             font-size: 16px;
             font-weight: bold;
-            color: #667eea;
+            color: #333;
             margin-bottom: 5px;
         `;
         foodTitle.textContent = `🍽️ ${foodData.title}`;

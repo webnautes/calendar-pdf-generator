@@ -674,10 +674,10 @@ h1 {
 }
 
 .calendar {
-    background: #f8f9fa;
-    border-radius: 15px;
+    background: white;
     padding: 20px;
     margin-bottom: 30px;
+    border: 1px solid #ddd;
 }
 
 .calendar-header {
@@ -685,13 +685,14 @@ h1 {
     margin-bottom: 20px;
     font-size: 24px;
     font-weight: 700;
-    color: #667eea;
+    color: #333;
 }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    border-top: 1px solid #ddd;
+    border-left: 1px solid #ddd;
 }
 
 .day-header {
@@ -700,6 +701,9 @@ h1 {
     font-weight: 700;
     color: #666;
     font-size: 14px;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    background: #fafafa;
 }
 
 .day-header.sunday {
@@ -717,17 +721,17 @@ h1 {
     align-items: stretch;
     justify-content: flex-start;
     background: white;
-    border-radius: 10px;
     font-size: 16px;
     font-weight: 500;
     color: #333;
-    transition: all 0.2s;
     padding: 5px;
     overflow: hidden;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
 }
 
 .day-cell.empty {
-    background: transparent;
+    background: white;
 }
 
 .day-cell.sunday {
@@ -739,10 +743,21 @@ h1 {
 }
 
 .day-cell.today {
-    background: #667eea;
-    color: white;
+    background: white;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    border-right: 2px solid #333;
+    border-bottom: 2px solid #333;
+}
+
+.day-cell.today .day-number {
+    background: #333;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .day-cell.holiday {
@@ -751,6 +766,11 @@ h1 {
 }
 
 .day-cell.holiday.today {
+    background: white;
+    color: #e74c3c;
+}
+
+.day-cell.holiday.today .day-number {
     background: #e74c3c;
     color: white;
 }
@@ -952,26 +972,25 @@ h1 {
 /* 제철 음식 섹션 스타일 */
 .seasonal-foods-section {
     margin-top: 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-    border-radius: 15px;
+    background: white;
     padding: 20px;
     border: 1px solid #ddd;
 }
 
 .seasonal-foods-notice {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #f8f8f8;
+    color: #333;
     padding: 12px 16px;
-    border-radius: 10px;
     font-size: 14px;
     margin-bottom: 15px;
     text-align: center;
+    border: 1px solid #ddd;
 }
 
 .seasonal-foods-title {
     font-size: 20px;
     font-weight: bold;
-    color: #667eea;
+    color: #333;
     margin-bottom: 8px;
 }
 
@@ -991,9 +1010,8 @@ h1 {
 
 .seasonal-category {
     background: white;
-    border-radius: 12px;
     padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eee;
 }
 
 .seasonal-category-name {
@@ -1002,7 +1020,7 @@ h1 {
     color: #333;
     margin-bottom: 12px;
     padding-left: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 3px solid #333;
 }
 
 .seasonal-food-item {
@@ -1010,10 +1028,9 @@ h1 {
     align-items: flex-start;
     gap: 12px;
     padding: 10px 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    background: white;
     margin-bottom: 8px;
-    border: 1px solid #e9ecef;
+    border-bottom: 1px solid #eee;
 }
 
 .seasonal-food-item:last-child {
@@ -1023,7 +1040,7 @@ h1 {
 .seasonal-food-name {
     font-size: 14px;
     font-weight: 600;
-    color: #667eea;
+    color: #333;
     min-width: 70px;
     flex-shrink: 0;
 }
@@ -1143,14 +1160,13 @@ h1 {
 
 .modal-content {
     background: white;
-    border-radius: 16px;
     max-width: 900px;
     width: 100%;
     max-height: 90vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid #ddd;
 }
 
 .modal-header {
@@ -1220,8 +1236,7 @@ h1 {
 }
 
 .month-item {
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
+    border: 1px solid #ddd;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
@@ -1229,19 +1244,17 @@ h1 {
 }
 
 .month-item:hover {
-    border-color: #667eea;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    border-color: #333;
 }
 
 .month-item.selected {
-    border-color: #667eea;
-    background: #f0f3ff;
+    border-color: #333;
+    border-width: 2px;
 }
 
 .month-item.selected .month-checkbox {
-    background: #667eea;
-    border-color: #667eea;
+    background: #333;
+    border-color: #333;
 }
 
 .month-item.selected .month-checkbox::after {
