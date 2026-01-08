@@ -1610,7 +1610,6 @@ function createMonthCalendarForPDF(year, month, perPage) {
         padding: ${config.padding}px;
         width: ${config.width}px;
         box-sizing: border-box;
-        border: 1px solid #ddd;
     `;
 
     // 월 헤더 (1개일 때는 숨김 - 제목에 표시됨)
