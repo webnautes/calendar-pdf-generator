@@ -1,6 +1,6 @@
 # 서비스 이용약관
 
-**최종 업데이트: 2026년 1월 3일**
+**최종 업데이트: 2026년 1월 27일**
 
 ## 1. 서비스 개요
 
@@ -18,7 +18,8 @@ Calendar PDF Generator("본 서비스")는 사용자가 달력을 생성하고 P
 
 - 달력 생성 및 표시 (1900년~2100년)
 - 한국 공휴일 자동 표시
-- 구글 캘린더 연동 (선택사항)
+- D-Day 카운터 (최대 3개)
+- 제철 음식 정보 표시
 - PDF 형식으로 달력 다운로드
 - 모바일 및 데스크톱 반응형 디자인
 
@@ -30,13 +31,6 @@ Calendar PDF Generator("본 서비스")는 사용자가 달력을 생성하고 P
 - 다른 사용자나 제3자의 권리를 침해하지 않을 것
 - 서비스의 보안이나 무결성을 해치는 행위 금지
 - 자동화된 수단(봇, 스크래퍼 등)을 통한 무단 접근 금지
-
-### 3.3 구글 캘린더 연동
-
-- 구글 캘린더 연동은 **선택 사항**입니다
-- 연동 시 구글 계정 인증이 필요합니다
-- **읽기 전용 권한**만 요청합니다
-- 사용자는 언제든지 구글 계정 설정에서 접근 권한을 취소할 수 있습니다
 
 ## 4. 지적 재산권
 
@@ -65,7 +59,7 @@ copies or substantial portions of the Software.
 본 서비스는 다음 오픈소스 라이브러리를 사용합니다:
 
 - jsPDF (MIT License)
-- Google APIs Client Library
+- html2canvas (MIT License)
 
 ## 5. 면책 조항
 
@@ -80,7 +74,6 @@ copies or substantial portions of the Software.
 ### 5.2 정확성
 
 - 공휴일 정보는 참고용으로 제공되며, 정확성을 보장하지 않습니다
-- 구글 캘린더 데이터는 사용자의 구글 계정에서 직접 가져오며, 본 서비스는 해당 데이터의 정확성에 대해 책임지지 않습니다
 
 ### 5.3 데이터 손실
 
@@ -118,14 +111,7 @@ copies or substantial portions of the Software.
 
 ## 9. 제3자 서비스
 
-### 9.1 Google Services
-
-본 서비스는 Google APIs를 사용하며:
-
-- Google의 서비스 약관이 적용됩니다: https://policies.google.com/terms
-- Google의 개인정보처리방침이 적용됩니다: https://policies.google.com/privacy
-
-### 9.2 GitHub Pages
+### 9.1 GitHub Pages
 
 본 서비스는 GitHub Pages를 통해 호스팅되며:
 
