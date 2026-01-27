@@ -1,31 +1,8 @@
-// Google Calendar API 설정
-const CLIENT_ID = '212094760476-2gu4j66cvv709ni4e8221pvcof5ioljq.apps.googleusercontent.com';
-const API_KEY = ''; // API 키 (선택사항, OAuth만으로도 작동)
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
-
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
-let accessToken = null;
-let oauthState = null; // OAuth CSRF 방지용 state 파라미터
-
-// OAuth state 생성 함수 (CSRF 공격 방지)
-function generateOAuthState() {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-}
-let googleEvents = {}; // 구글 캘린더 이벤트 저장
-let calendarList = []; // 사용 가능한 캘린더 목록
-let selectedCalendars = new Set(); // 선택된 캘린더 ID 목록
-
 // 현재 날짜
 const today = new Date();
 let currentYear = today.getFullYear();
 let currentMonth = today.getMonth() + 1; // JavaScript는 0부터 시작
 let showHolidays = false; // 공휴일 표시 여부
-let showGoogleEvents = false; // 구글 이벤트 표시 여부
 let monthsPerPage = 1; // PDF 한 장당 달력 개수 (항상 1개월)
 let showSeasonalFood = false; // 제철 음식 표시 여부 (1개월 모드)
 
@@ -589,282 +566,6 @@ function updateSelectedCount() {
     confirmBtn.disabled = count === 0;
 }
 
-// Google API 초기화
-function gapiLoaded() {
-    gapi.load('client', initializeGapiClient);
-}
-
-async function initializeGapiClient() {
-    const initConfig = {
-        discoveryDocs: [DISCOVERY_DOC],
-    };
-    if (API_KEY) {
-        initConfig.apiKey = API_KEY;
-    }
-    await gapi.client.init(initConfig);
-    gapiInited = true;
-    maybeEnableButtons();
-}
-
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: '', // 나중에 정의
-    });
-    gisInited = true;
-    maybeEnableButtons();
-}
-
-function maybeEnableButtons() {
-    if (gapiInited && gisInited) {
-        document.getElementById('authorizeButton').style.display = 'inline-block';
-    }
-}
-
-// 로그인 처리
-function handleAuthClick() {
-    // 새로운 state 생성
-    oauthState = generateOAuthState();
-
-    tokenClient.callback = async (resp) => {
-        if (resp.error !== undefined) {
-            throw (resp);
-        }
-
-        // State 파라미터 검증 (CSRF 공격 방지)
-        if (resp.state && resp.state !== oauthState) {
-            console.error('OAuth state mismatch - possible CSRF attack');
-            alert('보안 검증에 실패했습니다. 다시 시도해 주세요.');
-            return;
-        }
-
-        accessToken = gapi.client.getToken();
-        document.getElementById('signoutButton').style.display = 'inline-block';
-        document.getElementById('authorizeButton').style.display = 'none';
-        document.getElementById('authStatus').textContent = '✓ 구글 캘린더 연동됨';
-        document.getElementById('showGoogleEvents').disabled = false;
-
-        // 캘린더 목록 먼저 가져오기
-        await loadCalendarList();
-
-        // 이벤트 가져오기
-        await loadCalendarEvents();
-
-        // 자동으로 이벤트 표시 활성화
-        document.getElementById('showGoogleEvents').checked = true;
-        showGoogleEvents = true;
-
-        renderCalendar();
-    };
-
-    if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({prompt: 'consent', state: oauthState});
-    } else {
-        tokenClient.requestAccessToken({prompt: '', state: oauthState});
-    }
-}
-
-// 로그아웃 처리
-function handleSignoutClick() {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-        google.accounts.oauth2.revoke(token.access_token);
-        gapi.client.setToken('');
-        accessToken = null;
-        googleEvents = {};
-        calendarList = [];
-        selectedCalendars.clear();
-        document.getElementById('authorizeButton').style.display = 'inline-block';
-        document.getElementById('signoutButton').style.display = 'none';
-        document.getElementById('authStatus').textContent = '';
-        document.getElementById('showGoogleEvents').checked = false;
-        document.getElementById('showGoogleEvents').disabled = true;
-        showGoogleEvents = false;
-
-        // 캘린더 선택 UI 숨기기
-        const calendarSelector = document.getElementById('calendarSelector');
-        if (calendarSelector) {
-            calendarSelector.style.display = 'none';
-        }
-
-        renderCalendar();
-    }
-}
-
-// 캘린더 목록 가져오기
-async function loadCalendarList() {
-    try {
-        const response = await gapi.client.calendar.calendarList.list({
-            'showDeleted': false,
-            'showHidden': false  // 숨긴 캘린더는 표시 안함
-        });
-
-        calendarList = response.result.items || [];
-
-        // 기본적으로 모든 캘린더 선택
-        selectedCalendars.clear();
-        calendarList.forEach(cal => {
-            selectedCalendars.add(cal.id);
-        });
-
-        // 캘린더 선택 UI 업데이트
-        renderCalendarSelector();
-
-        console.log('캘린더 목록 로드 완료:', calendarList.length, '개');
-        console.log('캘린더 목록:', calendarList.map(c => c.summary));
-        return calendarList;
-    } catch (err) {
-        console.error('캘린더 목록 가져오기 실패:', err);
-        return [];
-    }
-}
-
-// 캘린더 선택 UI 렌더링
-function renderCalendarSelector() {
-    const container = document.getElementById('calendarList');
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    calendarList.forEach(calendar => {
-        const item = document.createElement('label');
-        item.className = 'calendar-item';
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = calendar.id;
-        checkbox.checked = selectedCalendars.has(calendar.id);
-        checkbox.addEventListener('change', async (e) => {
-            if (e.target.checked) {
-                selectedCalendars.add(calendar.id);
-            } else {
-                selectedCalendars.delete(calendar.id);
-            }
-            // 이벤트 다시 로드
-            await loadCalendarEvents();
-            renderCalendar();
-        });
-
-        const colorDot = document.createElement('span');
-        colorDot.className = 'calendar-color-dot';
-        colorDot.style.backgroundColor = calendar.backgroundColor || '#4285f4';
-
-        const name = document.createElement('span');
-        name.className = 'calendar-name';
-        name.textContent = calendar.summary || '(이름 없음)';
-
-        item.appendChild(checkbox);
-        item.appendChild(colorDot);
-        item.appendChild(name);
-        container.appendChild(item);
-    });
-
-    // 캘린더 선택 영역 표시
-    const calendarSelector = document.getElementById('calendarSelector');
-    if (calendarSelector && calendarList.length > 0) {
-        calendarSelector.style.display = 'block';
-    }
-}
-
-// 캘린더 이벤트 가져오기 (선택된 모든 캘린더에서)
-async function loadCalendarEvents() {
-    try {
-        const startDate = new Date(currentYear, 0, 1);
-        const endDate = new Date(currentYear, 11, 31, 23, 59, 59);
-
-        // 이벤트 초기화
-        googleEvents = {};
-
-        // 선택된 캘린더가 없으면 종료
-        if (selectedCalendars.size === 0) {
-            console.log('선택된 캘린더가 없습니다.');
-            return;
-        }
-
-        // 선택된 각 캘린더에서 이벤트 가져오기
-        const calendarPromises = Array.from(selectedCalendars).map(async (calendarId) => {
-            try {
-                const calendar = calendarList.find(cal => cal.id === calendarId);
-                const calendarColor = calendar ? (calendar.backgroundColor || '#4285f4') : '#4285f4';
-
-                const request = {
-                    'calendarId': calendarId,
-                    'timeMin': startDate.toISOString(),
-                    'timeMax': endDate.toISOString(),
-                    'showDeleted': false,
-                    'singleEvents': true,
-                    'maxResults': 2500,
-                    'orderBy': 'startTime',
-                };
-
-                const response = await gapi.client.calendar.events.list(request);
-                return {
-                    calendarId,
-                    calendarColor,
-                    calendarName: calendar ? calendar.summary : calendarId,
-                    events: response.result.items || []
-                };
-            } catch (err) {
-                console.error(`캘린더 ${calendarId} 이벤트 가져오기 실패:`, err);
-                return { calendarId, calendarColor: '#4285f4', events: [] };
-            }
-        });
-
-        const results = await Promise.all(calendarPromises);
-
-        // 이벤트를 날짜별로 정리
-        results.forEach(({ calendarColor, calendarName, events }) => {
-            events.forEach(event => {
-                const start = event.start.dateTime || event.start.date;
-                const eventDate = new Date(start);
-                const dateKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
-
-                if (!googleEvents[dateKey]) {
-                    googleEvents[dateKey] = [];
-                }
-                googleEvents[dateKey].push({
-                    title: event.summary || '(제목 없음)',
-                    start: start,
-                    allDay: !event.start.dateTime,
-                    color: event.colorId ? getEventColor(event.colorId) : calendarColor,
-                    calendarName: calendarName
-                });
-            });
-        });
-
-        console.log('구글 캘린더 이벤트 로드 완료:', Object.keys(googleEvents).length, '일');
-    } catch (err) {
-        console.error('이벤트 가져오기 실패:', err);
-        alert('캘린더 이벤트를 가져오는데 실패했습니다.');
-    }
-}
-
-// Google Calendar 이벤트 색상 ID를 실제 색상으로 변환
-function getEventColor(colorId) {
-    const colors = {
-        '1': '#7986cb',  // Lavender
-        '2': '#33b679',  // Sage
-        '3': '#8e24aa',  // Grape
-        '4': '#e67c73',  // Flamingo
-        '5': '#f6bf26',  // Banana
-        '6': '#f4511e',  // Tangerine
-        '7': '#039be5',  // Peacock
-        '8': '#616161',  // Graphite
-        '9': '#3f51b5',  // Blueberry
-        '10': '#0b8043', // Basil
-        '11': '#d50000'  // Tomato
-    };
-    return colors[colorId] || '#4285f4';
-}
-
-// 특정 날짜의 구글 이벤트 가져오기
-function getGoogleEvents(year, month, day) {
-    if (!showGoogleEvents) return [];
-    const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return googleEvents[dateKey] || [];
-}
-
 // Google Apps Script API URL (배포 후 실제 URL로 교체 필요)
 // APPS_SCRIPT_SETUP.md 파일 참고하여 설정하세요
 const STATS_API_URL = 'https://script.google.com/macros/s/AKfycbyy329R1fEkfOFjFr92rLna91fOoMsNruhCu2nH6oZNRFNE9FwZDnylRyEDT3M1k6DwrQ/exec';
@@ -974,58 +675,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCalendar();
     attachEventListeners();
 
-    // Google API 로드 (스크립트 로딩 대기)
-    initGoogleAPIs();
-
     // PDF 카운터 초기화
     initPdfCounter();
 });
-
-// Google API 초기화 (스크립트 로딩 대기)
-function initGoogleAPIs() {
-    let gapiReady = false;
-    let gisReady = false;
-
-    // gapi 체크
-    function checkGapi() {
-        if (typeof gapi !== 'undefined' && !gapiReady) {
-            gapiReady = true;
-            gapiLoaded();
-        }
-    }
-
-    // GIS(google.accounts) 체크
-    function checkGis() {
-        if (typeof google !== 'undefined' && google.accounts && !gisReady) {
-            gisReady = true;
-            gisLoaded();
-        }
-    }
-
-    // 즉시 체크
-    checkGapi();
-    checkGis();
-
-    // 아직 로드되지 않았으면 폴링
-    if (!gapiReady || !gisReady) {
-        const maxAttempts = 50; // 최대 5초 대기
-        let attempts = 0;
-
-        const interval = setInterval(() => {
-            attempts++;
-
-            if (!gapiReady) checkGapi();
-            if (!gisReady) checkGis();
-
-            if ((gapiReady && gisReady) || attempts >= maxAttempts) {
-                clearInterval(interval);
-                if (attempts >= maxAttempts && (!gapiReady || !gisReady)) {
-                    console.warn('Google API 로드 시간 초과. 페이지를 새로고침해 주세요.');
-                }
-            }
-        }, 100);
-    }
-}
 
 // 년도 선택기 초기화
 function initYearSelector() {
@@ -1093,7 +745,6 @@ function renderCalendar() {
 
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(currentYear, currentMonth, day);
-        const events = getGoogleEvents(currentYear, currentMonth, day);
         const ddayInfos = getDdayInfo(currentYear, currentMonth, day);
 
         // 컨테이너 생성
@@ -1140,36 +791,6 @@ function renderCalendar() {
             holidayName.textContent = holiday;
             content.appendChild(holidayName);
             dayCell.classList.add('holiday');
-        }
-
-        // 구글 이벤트 텍스트로 표시
-        if (events.length > 0) {
-            const eventsList = document.createElement('div');
-            eventsList.className = 'events-list';
-
-            // 최대 3개의 이벤트 표시
-            const maxEvents = 3;
-            const displayEvents = events.slice(0, maxEvents);
-
-            displayEvents.forEach(event => {
-                const eventItem = document.createElement('div');
-                eventItem.className = 'event-item';
-                eventItem.style.backgroundColor = event.color || '#4285f4';
-                eventItem.textContent = event.title;
-                eventItem.title = `[${event.calendarName || '캘린더'}] ${event.title}`;
-                eventsList.appendChild(eventItem);
-            });
-
-            // 더 많은 이벤트가 있으면 표시
-            if (events.length > maxEvents) {
-                const moreEvents = document.createElement('div');
-                moreEvents.className = 'more-events';
-                moreEvents.textContent = `+${events.length - maxEvents}개 더보기`;
-                moreEvents.title = events.slice(maxEvents).map(e => `[${e.calendarName || '캘린더'}] ${e.title}`).join('\n');
-                eventsList.appendChild(moreEvents);
-            }
-
-            content.appendChild(eventsList);
         }
 
         dayCell.appendChild(content);
@@ -1392,14 +1013,13 @@ function createMonthCalendar(year, month) {
         const dayCell = document.createElement('div');
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
-        const events = getGoogleEvents(year, month, day);
 
         // 공휴일이면 빨간색, 아니면 기존 색상
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
 
         dayCell.style.cssText = `
             text-align: center;
-            padding: ${holiday || events.length > 0 ? '4px 2px' : '8px 5px'};
+            padding: ${holiday ? '4px 2px' : '8px 5px'};
             font-size: 12px;
             background: #f8f9fa;
             border-radius: 5px;
@@ -1425,19 +1045,6 @@ function createMonthCalendar(year, month) {
             `;
             holidayName.textContent = holiday;
             dayCell.appendChild(holidayName);
-        }
-
-        // 구글 이벤트 점 표시
-        if (events.length > 0) {
-            const eventDot = document.createElement('div');
-            eventDot.style.cssText = `
-                width: 4px;
-                height: 4px;
-                background: #4285f4;
-                border-radius: 50%;
-                margin-top: 2px;
-            `;
-            dayCell.appendChild(eventDot);
         }
 
         grid.appendChild(dayCell);
@@ -1674,7 +1281,6 @@ function createMonthCalendarForPDF(year, month, perPage) {
         const dayCell = document.createElement('div');
         const dayOfWeek = (firstDay + day - 1) % 7;
         const holiday = getHoliday(year, month, day);
-        const events = getGoogleEvents(year, month, day);
         const ddayInfos = getDdayInfo(year, month, day);
 
         const textColor = holiday ? '#e74c3c' : (dayOfWeek === 0 ? '#e74c3c' : dayOfWeek === 6 ? '#3498db' : '#333');
@@ -1766,43 +1372,6 @@ function createMonthCalendarForPDF(year, month, perPage) {
             `;
             holidayName.textContent = holiday;
             dayCell.appendChild(holidayName);
-        }
-
-        // 구글 이벤트 표시 (웹과 동일한 스타일)
-        if (events.length > 0) {
-            const eventFontSize = Math.max(config.daySize - 5, 8);
-            const maxEvents = 3;
-            const displayEvents = events.slice(0, maxEvents);
-
-            displayEvents.forEach((event) => {
-                const eventItem = document.createElement('div');
-                eventItem.style.cssText = `
-                    font-size: ${eventFontSize}px;
-                    color: white;
-                    background: ${event.color || '#4285f4'};
-                    padding: 1px 4px;
-                    border-radius: 2px;
-                    word-break: break-word;
-                    overflow-wrap: break-word;
-                    line-height: 1.3;
-                    max-width: 100%;
-                    margin-top: 1px;
-                `;
-                eventItem.textContent = event.title;
-                dayCell.appendChild(eventItem);
-            });
-
-            // 더 많은 이벤트 표시
-            if (events.length > maxEvents) {
-                const moreItem = document.createElement('div');
-                moreItem.style.cssText = `
-                    font-size: ${eventFontSize - 1}px;
-                    color: #666;
-                    margin-top: 1px;
-                `;
-                moreItem.textContent = `+${events.length - maxEvents}개`;
-                dayCell.appendChild(moreItem);
-            }
         }
 
         grid.appendChild(dayCell);
@@ -2003,27 +1572,6 @@ function attachEventListeners() {
             showHolidays = e.target.checked;
             renderCalendar();
         });
-    }
-
-    // 구글 이벤트 표시 토글
-    const googleEventsCheckbox = document.getElementById('showGoogleEvents');
-    if (googleEventsCheckbox) {
-        googleEventsCheckbox.addEventListener('change', (e) => {
-            showGoogleEvents = e.target.checked;
-            renderCalendar();
-        });
-    }
-
-    // 구글 로그인 버튼
-    const authorizeButton = document.getElementById('authorizeButton');
-    if (authorizeButton) {
-        authorizeButton.addEventListener('click', handleAuthClick);
-    }
-
-    // 구글 로그아웃 버튼
-    const signoutButton = document.getElementById('signoutButton');
-    if (signoutButton) {
-        signoutButton.addEventListener('click', handleSignoutClick);
     }
 
     // 제철 음식 표시 체크박스
