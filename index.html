@@ -47,10 +47,6 @@
                     <input type="checkbox" id="showHolidays">
                     <span class="checkbox-text">🇰🇷 한국 공휴일 표시</span>
                 </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="showGoogleEvents" disabled>
-                    <span class="checkbox-text">📅 구글 캘린더 이벤트 표시</span>
-                </label>
             </div>
 
             <div class="pdf-options">
@@ -116,37 +112,6 @@
                 <button type="button" id="addDdayBtn" class="dday-add-btn">+ D-Day 추가</button>
             </div>
 
-            <div class="google-auth-section">
-                <div class="verification-notice">
-                    <span class="notice-icon">⚠️</span>
-                    <span class="notice-text">현재 Google 앱 심사 중입니다. 로그인 시 "고급 → 이동" 을 클릭하세요.</span>
-                </div>
-                <div class="permission-notice">
-                    <span class="notice-icon">🔒</span>
-                    <div class="permission-details">
-                        <strong>권한 안내</strong>
-                        <p>Google 로그인 시 "연락처 보기" 권한이 표시되지만, <strong>실제로 연락처 정보는 수집하지 않습니다</strong>.</p>
-                        <p>이 메시지는 캘린더 공유 정보 접근 권한 때문에 표시되는 것이며, 본 앱은 <strong>캘린더와 일정 정보만 읽어옵니다</strong>.</p>
-                    </div>
-                </div>
-                <button id="authorizeButton" class="btn-google" style="display: none;">
-                    🔐 구글 캘린더 연동
-                </button>
-                <button id="signoutButton" class="btn-google-signout" style="display: none;">
-                    🚪 로그아웃
-                </button>
-                <div id="authStatus" class="auth-status"></div>
-            </div>
-
-            <div id="calendarSelector" class="calendar-selector" style="display: none;">
-                <div class="calendar-selector-header">
-                    <span class="calendar-selector-title">📂 표시할 캘린더 선택</span>
-                    <button id="toggleCalendarList" class="toggle-btn">▼</button>
-                </div>
-                <div id="calendarList" class="calendar-list">
-                    <!-- JavaScript로 캘린더 목록이 생성될 예정 -->
-                </div>
-            </div>
         </div>
 
         <div id="calendar" class="calendar">
@@ -206,11 +171,6 @@
         </div>
         <p class="footer-copyright">© 2025-2026 webnautes | MIT License</p>
     </footer>
-
-    <!-- Google Identity Services -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Google API Client Library -->
-    <script src="https://apis.google.com/js/api.js"></script>
 
     <!-- PDF 생성 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
