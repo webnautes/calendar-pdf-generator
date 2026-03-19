@@ -674,14 +674,12 @@ async function fetchLastUpdateDate() {
     if (!el) return;
 
     try {
-        const response = await fetch('https://api.github.com/repos/webnautes/calendar-pdf-generator/commits?per_page=1');
-        if (!response.ok) throw new Error('GitHub API 요청 실패');
+        const response = await fetch('version.json');
+        if (!response.ok) throw new Error('version.json 로드 실패');
 
-        const commits = await response.json();
-        if (commits.length > 0) {
-            const lastDate = new Date(commits[0].commit.committer.date);
-            const formatted = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}-${String(lastDate.getDate()).padStart(2, '0')}`;
-            el.textContent = formatted;
+        const data = await response.json();
+        if (data.lastUpdate) {
+            el.textContent = data.lastUpdate;
         }
     } catch (error) {
         console.error('마지막 수정일자 조회 에러:', error);
