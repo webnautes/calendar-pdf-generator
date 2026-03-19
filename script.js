@@ -668,6 +668,27 @@ async function incrementPdfCounter() {
     }, 3000);
 }
 
+// 마지막 코드 수정일자 가져오기
+async function fetchLastUpdateDate() {
+    const el = document.getElementById('lastUpdateDate');
+    if (!el) return;
+
+    try {
+        const response = await fetch('https://api.github.com/repos/webnautes/calendar-pdf-generator/commits?per_page=1');
+        if (!response.ok) throw new Error('GitHub API 요청 실패');
+
+        const commits = await response.json();
+        if (commits.length > 0) {
+            const lastDate = new Date(commits[0].commit.committer.date);
+            const formatted = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}-${String(lastDate.getDate()).padStart(2, '0')}`;
+            el.textContent = formatted;
+        }
+    } catch (error) {
+        console.error('마지막 수정일자 조회 에러:', error);
+        el.textContent = '-';
+    }
+}
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initYearSelector();
@@ -677,6 +698,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // PDF 카운터 초기화
     initPdfCounter();
+
+    // 마지막 코드 수정일자 표시
+    fetchLastUpdateDate();
 });
 
 // 년도 선택기 초기화
