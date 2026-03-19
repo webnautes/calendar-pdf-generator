@@ -674,7 +674,7 @@ async function fetchLastUpdateDate() {
     if (!el) return;
 
     try {
-        const response = await fetch('version.json');
+        const response = await fetch('version.json?t=' + Date.now());
         if (!response.ok) throw new Error('version.json 로드 실패');
 
         const data = await response.json();
